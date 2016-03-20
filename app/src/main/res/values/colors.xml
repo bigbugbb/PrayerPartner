@@ -17,7 +17,7 @@
     <color name="motions_graph_grid">#808080</color>
     <color name="show_timeline_background">#FCFCFC</color>
     <color name="timelines_background">#F8F8F8</color>
-    <color name="tracks_background">#ECECEC</color>
+    <color name="pp_background">#ECECEC</color>
     <color name="photos_background">#ECECEC</color>
 
     <color name="blue_grey_500">#607D8B</color>

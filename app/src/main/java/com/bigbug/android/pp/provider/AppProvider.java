@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.bigbug.android.pp.provider.AppContract.Prayers;
 import com.bigbug.android.pp.provider.AppContract.Rounds;
 import com.bigbug.android.pp.provider.AppContract.Partners;
 import com.bigbug.android.pp.provider.AppDatabase.Tables;
@@ -42,11 +43,14 @@ public class AppProvider extends ContentProvider {
 
     private static final UriMatcher sUriMatcher = buildUriMatcher();
 
-    private static final int ROUNDS = 100;
-    private static final int ROUNDS_ID = 101;
+    private static final int PRAYERS = 100;
+    private static final int PRAYERS_ID = 101;
 
-    private static final int PARTNERS = 200;
-    private static final int PARTNERS_ID = 201;
+    private static final int ROUNDS = 200;
+    private static final int ROUNDS_ID = 201;
+
+    private static final int PARTNERS = 300;
+    private static final int PARTNERS_ID = 301;
 
     /**
      * Build and return a {@link UriMatcher} that catches all {@link Uri}
@@ -55,6 +59,9 @@ public class AppProvider extends ContentProvider {
     private static UriMatcher buildUriMatcher() {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
         final String authority = AppContract.CONTENT_AUTHORITY;
+
+        matcher.addURI(authority, "prayers", PRAYERS);
+        matcher.addURI(authority, "prayers/*", PRAYERS_ID);
 
         matcher.addURI(authority, "rounds", ROUNDS);
         matcher.addURI(authority, "rounds/*", ROUNDS_ID);
@@ -169,6 +176,10 @@ public class AppProvider extends ContentProvider {
     public String getType(Uri uri) {
         final int match = sUriMatcher.match(uri);
         switch (match) {
+            case PRAYERS:
+                return Prayers.CONTENT_TYPE;
+            case PRAYERS_ID:
+                return Prayers.CONTENT_ITEM_TYPE;
             case ROUNDS:
                 return Rounds.CONTENT_TYPE;
             case ROUNDS_ID:
@@ -228,6 +239,10 @@ public class AppProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         switch (match) {
+            case PRAYERS: {
+                table = Tables.PRAYERS;
+                break;
+            }
             case ROUNDS: {
                 table = Tables.ROUNDS;
                 break;
@@ -266,6 +281,11 @@ public class AppProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
 
         switch (match) {
+            case PRAYERS: {
+                long newId = db.insertOrThrow(Tables.PRAYERS, null, values);
+                notifyChange(uri);
+                return Prayers.buildPrayerUri("" + newId);
+            }
             case ROUNDS: {
                 long newId = db.insertOrThrow(Tables.ROUNDS, null, values);
                 notifyChange(uri);
@@ -321,6 +341,13 @@ public class AppProvider extends ContentProvider {
         final SelectionBuilder builder = new SelectionBuilder();
         final int match = sUriMatcher.match(uri);
         switch (match) {
+            case PRAYERS: {
+                return builder.table(Tables.PRAYERS);
+            }
+            case PRAYERS_ID: {
+                final String id = Prayers.getPrayerId(uri);
+                return builder.table(Tables.PRAYERS).where(Prayers._ID + "=?", id);
+            }
             case ROUNDS: {
                 return builder.table(Tables.ROUNDS);
             }
@@ -349,18 +376,25 @@ public class AppProvider extends ContentProvider {
     private SelectionBuilder buildExpandedSelection(Uri uri, int match) {
         final SelectionBuilder builder = new SelectionBuilder();
         switch (match) {
+            case PRAYERS: {
+                return builder.table(Tables.PRAYERS);
+            }
+            case PRAYERS_ID: {
+                final String prayerId = Prayers.getPrayerId(uri);
+                return builder.table(Tables.PRAYERS).where(Prayers._ID + "=?", prayerId);
+            }
             case ROUNDS: {
                 return builder.table(Tables.ROUNDS);
             }
             case ROUNDS_ID: {
-                final String roundId = AppContract.Rounds.getRoundId(uri);
+                final String roundId = Rounds.getRoundId(uri);
                 return builder.table(Tables.ROUNDS).where(Rounds._ID + "=?", roundId);
             }
             case PARTNERS: {
                 return builder.table(Tables.PARTNERS);
             }
             case PARTNERS_ID: {
-                final String partnerId = AppContract.Partners.getPartnerId(uri);
+                final String partnerId = Partners.getPartnerId(uri);
                 return builder.table(Tables.PARTNERS).where(Partners._ID + "=?", partnerId);
             }
             default: {

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.bigbug.android.pp.provider.AppContract.Prayers;
 import com.bigbug.android.pp.provider.AppContract.Rounds;
 import com.bigbug.android.pp.provider.AppContract.Partners;
 import com.bigbug.android.pp.sync.SyncHelper;
@@ -33,6 +34,7 @@ public class AppDatabase extends SQLiteOpenHelper {
     private final Context mContext;
 
     interface Tables {
+        String PRAYERS = "prayers";
         String ROUNDS = "rounds";
         String PARTNERS = "partners";
     }
@@ -54,6 +56,15 @@ public class AppDatabase extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         // Create tables
+        db.execSQL("CREATE TABLE " + Tables.PRAYERS + " ("
+                + Prayers._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + Prayers.DIRTY + " INTEGER DEFAULT 1,"
+                + Prayers.SYNC + " TEXT,"
+                + Prayers.UPDATED + " INTEGER NOT NULL,"
+                + Prayers.NAME + " TEXT NOT NULL,"
+                + Prayers.PHOTO + " TEXT,"
+                + Prayers.EMAIL + " TEXT NOT NULL);");
+
         db.execSQL("CREATE TABLE " + Tables.ROUNDS + " ("
                 + Rounds._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + Rounds.DIRTY + " INTEGER DEFAULT 1,"

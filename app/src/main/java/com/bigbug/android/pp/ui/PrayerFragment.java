@@ -1,42 +1,46 @@
 package com.bigbug.android.pp.ui;
 
-import android.Manifest;
 import android.app.Activity;
+import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Loader;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.util.DisplayMetrics;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bigbug.android.pp.R;
-import com.bigbug.android.pp.ui.widget.CollectionView;
+import com.bigbug.android.pp.adapter.BaseAbstractRecyclerCursorAdapter;
+import com.bigbug.android.pp.data.model.Prayer;
+import com.bigbug.android.pp.provider.AppContract;
 import com.bigbug.android.pp.util.ThrottledContentObserver;
-import com.bigbug.android.pp.R;
-import com.google.android.gms.plus.PlusOneButton;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.bigbug.android.pp.util.LogUtils.LOGD;
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
 
-public class PrayerFragment extends AppFragment {
+public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedListener {
     private static final String TAG = makeLogTag(PrayerFragment.class);
 
+    private RecyclerView mPrayerList;
 
-    private CollectionView mPhotoCollectionView;
-//    private PhotoCollectionAdapter mPhotoCollectionAdapter;
+    private PrayerAdapter mPrayerAdapter;
 
-    private FloatingActionButton mFabTakePhoto;
+    private FloatingActionButton mFabAddPrayer;
 
-    private ThrottledContentObserver mPhotosObserver;
+    private ThrottledContentObserver mPrayerObserver;
 
     public PrayerFragment() {
         // Required empty public constructor
@@ -47,23 +51,23 @@ public class PrayerFragment extends AppFragment {
         super.onAttach(activity);
 
         // Should be triggered after we taking a new photo
-        mPhotosObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
+        mPrayerObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
             @Override
             public void onThrottledContentObserverFired() {
                 LOGD(TAG, "ThrottledContentObserver fired (photos). Content changed.");
                 if (isAdded()) {
                     LOGD(TAG, "Requesting photos cursor reload as a result of ContentObserver firing.");
-                    reloadPhotosWithRequiredPermission();
+                    reloadPrayers(getLoaderManager(), PrayerFragment.this);
                 }
             }
         });
-        activity.getContentResolver().registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, true, mPhotosObserver);
+        activity.getContentResolver().registerContentObserver(AppContract.Prayers.CONTENT_URI, true, mPrayerObserver);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        getActivity().getContentResolver().unregisterContentObserver(mPhotosObserver);
+        getActivity().getContentResolver().unregisterContentObserver(mPrayerObserver);
     }
 
     @Override
@@ -76,9 +80,26 @@ public class PrayerFragment extends AppFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         FrameLayout root = (FrameLayout) inflater.inflate(R.layout.fragment_prayer, container, false);
-//        mPhotoCollectionView = (CollectionView) root.findViewById(R.id.photos_view);
-//        mPhotoCollectionAdapter = new PhotoCollectionAdapter();
-//        mPhotoCollectionView.setCollectionAdapter(mPhotoCollectionAdapter);
+
+        mPrayerList = (RecyclerView) root.findViewById(R.id.prayer_list);
+        mFabAddPrayer = (FloatingActionButton) root.findViewById(R.id.fab_add_prayer);
+        mFabAddPrayer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PrayerSettingDialog dialog = new PrayerSettingDialog();
+                FragmentManager fm = getFragmentManager();
+                if (fm.findFragmentByTag(PrayerSettingDialog.TAG) == null) {
+                    dialog.show(fm, PrayerSettingDialog.TAG);
+                }
+            }
+        });
+
+        mPrayerAdapter = new PrayerAdapter(getActivity());
+        mPrayerAdapter.addOnItemSelectedListener(this);
+
+        mPrayerList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mPrayerList.setItemAnimator(new DefaultItemAnimator());
+        mPrayerList.setAdapter(mPrayerAdapter);
 
         return root;
     }
@@ -92,13 +113,13 @@ public class PrayerFragment extends AppFragment {
     public void onResume() {
         super.onResume();
         LOGD(TAG, "Reloading data as a result of onResume()");
-        reloadPhotosWithRequiredPermission();
+        reloadPrayers(getLoaderManager(), this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mPhotosObserver.cancelPendingCallback();
+        mPrayerObserver.cancelPendingCallback();
     }
 
     @Override
@@ -114,7 +135,7 @@ public class PrayerFragment extends AppFragment {
 
         switch (loader.getId()) {
             case AppFragment.PartnersQuery.TOKEN_NORMAL: {
-
+                mPrayerAdapter.changeCursor(data);
                 break;
             }
         }
@@ -129,23 +150,84 @@ public class PrayerFragment extends AppFragment {
         }
     }
 
-    private void reloadPhotosWithRequiredPermission() {
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-//            reloadPhotos(getLoaderManager(), mBeginTime, mEndTime, this);
-        }
+    @Override
+    public void onItemSelected(View itemView, int position) {
+
     }
 
-    private void updateInventoryDisplayColumns(CollectionView.Inventory inventory) {
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
-        for (CollectionView.InventoryGroup group : inventory) {
-            if (dpWidth < 400) {
-                group.setDisplayCols(3);
-            } else if (dpWidth < 600) {
-                group.setDisplayCols(4);
-            } else {
-                group.setDisplayCols(5);
+    public static class PrayerAdapter extends BaseAbstractRecyclerCursorAdapter<PrayerAdapter.ViewHolder> {
+        private Context mContext;
+        private List<OnPrayerItemSelectedListener> mListeners = new ArrayList<>();
+
+        public PrayerAdapter(Context context) {
+            super(context, null);
+            mContext = context;
+        }
+
+        public void addOnItemSelectedListener(OnPrayerItemSelectedListener listener) {
+            mListeners.add(listener);
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View item = LayoutInflater.from(mContext).inflate(R.layout.item_prayer, parent, false);
+            return new ViewHolder(item);
+        }
+
+        /**
+         * Call when bind view with the cursor
+         *
+         * @param holder RecyclerView.ViewHolder
+         * @param cursor The cursor from which to get the data. The cursor is already
+         */
+        @Override
+        public void onBindViewHolder(ViewHolder holder, Cursor cursor) {
+            Prayer prayer = new Prayer(cursor);
+            holder.bindData(prayer);
+
+            if (cursor.isFirst()) {
+                for (OnPrayerItemSelectedListener listener : mListeners) {
+                    listener.onItemSelected(holder.itemView, holder.getLayoutPosition());
+                }
+            }
+        }
+
+        @Override
+        public Prayer getItem(int position) {
+            Cursor cursor = (Cursor) super.getItem(position);
+            if (cursor != null) {
+                return new Prayer(cursor);
+            }
+            return null;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return 0;
+        }
+
+        public class ViewHolder extends RecyclerView.ViewHolder {
+            TextView  mName;
+            TextView  mEmail;
+            ImageView mPhoto;
+
+            ViewHolder(final View view) {
+                super(view);
+                view.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        for (OnPrayerItemSelectedListener listener : mListeners) {
+                            listener.onItemSelected(view, getLayoutPosition());
+                        }
+                    }
+                });
+                mName = (TextView) view.findViewById(R.id.prayer_name);
+//                mEmail = (TextView) view.findViewById(R.id.prayer_email);
+                mPhoto = (ImageView) view.findViewById(R.id.prayer_photo);
+            }
+
+            void bindData(final Prayer prayer) {
+
             }
         }
     }

@@ -71,15 +71,6 @@
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
         <activity
-            android:name=".ui.CameraActivity"
-            android:label="CameraActivity"
-            android:parentActivityName=".ui.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.MainActivity"/>
-        </activity>
-        <activity
             android:name=".ui.AuthenticatorActivity"
             android:label="@string/login_label"
             android:theme="@style/AppTheme">

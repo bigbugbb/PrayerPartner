@@ -157,4 +157,7 @@
     <string name="title_activity_footprint">Footprint</string>
     <string name="title_activity_sign_in">SignInActivity</string>
 
+    <string name="prayer_setting_dialog_title">Prayer Setting</string>
+    <string name="prayer_dialog_error_data">Name and email can\'t be empty</string>
+
 </resources>

@@ -47,6 +47,11 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
         mHandler.removeCallbacksAndMessages(null);
     }
 
+    public static void reloadPrayers(LoaderManager loaderManager, LoaderCallbacks callbacks) {
+        Bundle args = new Bundle();
+        loaderManager.restartLoader(PrayersQuery.TOKEN_NORMAL, args, callbacks);
+    }
+
     public static void reloadRounds(LoaderManager loaderManager, LoaderCallbacks callbacks) {
         Bundle args = new Bundle();
         loaderManager.restartLoader(RoundsQuery.TOKEN_NORMAL, args, callbacks);
@@ -66,6 +71,16 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
         Loader<Cursor> loader = null;
 
         switch (id) {
+            case PrayersQuery.TOKEN_NORMAL: {
+                loader = new CursorLoader(
+                        getActivity(),
+                        AppContract.Prayers.CONTENT_URI,
+                        null,
+                        null,
+                        null,
+                        AppContract.Prayers.NAME);
+                break;
+            }
             case RoundsQuery.TOKEN_NORMAL: {
                 loader = new CursorLoader(
                         getActivity(),
@@ -100,11 +115,15 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
     public void onLoaderReset(Loader<Cursor> loader) {
     }
 
-    protected interface RoundsQuery {
+    protected interface PrayersQuery {
         int TOKEN_NORMAL = 100;
     }
 
-    protected interface PartnersQuery {
+    protected interface RoundsQuery {
         int TOKEN_NORMAL = 200;
+    }
+
+    protected interface PartnersQuery {
+        int TOKEN_NORMAL = 300;
     }
 }

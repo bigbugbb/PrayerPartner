@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="280dp"
+              android:layout_height="wrap_content"
+              android:padding="24dp"
+              android:layout_gravity="center_horizontal"
+              android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/photo_setting"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginRight="16dp"
+        android:clickable="true"
+        android:src="@drawable/ic_default_prayer"/>
+
+    <LinearLayout
+        android:id="@+id/name_email_setting"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/name_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Name"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:inputType="text"
+            android:imeOptions="actionDone" />
+
+        <EditText
+            android:id="@+id/email_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:inputType="textEmailAddress"
+            android:imeOptions="actionDone" />
+
+    </LinearLayout>
+
+</LinearLayout>

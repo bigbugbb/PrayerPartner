@@ -2,14 +2,24 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context=".PrayerFragment">
+             tools:context=".ui.PrayerFragment">
 
-    <com.google.android.gms.plus.PlusOneButton
-        android:id="@+id/plus_one_button"
-        xmlns:plus="http://schemas.android.com/apk/lib/com.google.android.gms.plus"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/prayer_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="4dp"
+        android:clipToPadding="false"
+        android:background="@color/pp_background"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_add_prayer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        plus:annotation="inline"
-        plus:size="standard"/>
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_fab_add"/>
 
 </FrameLayout>

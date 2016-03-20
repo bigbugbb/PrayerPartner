@@ -36,6 +36,12 @@ public class AppContract {
         String TIME = "time";
     }
 
+    interface PrayerColumns {
+        String NAME  = "name";
+        String PHOTO = "photo";
+        String EMAIL = "email";
+    }
+
     interface PartnerColumns extends BaseDataColumns {
         String FIRST  = "first";
         String SECOND = "second";
@@ -46,6 +52,23 @@ public class AppContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     public static final String SELECTION_BY_DIRTY = String.format("%s = ?", SyncColumns.DIRTY);
+
+    public static class Prayers implements PrayerColumns, SyncColumns, BaseColumns {
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath("prayers").build();
+
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.prayer";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.prayer";
+
+        /** Build a {@link Uri} that references a given round. */
+        public static Uri buildPrayerUri(String prayerId) {
+            return CONTENT_URI.buildUpon().appendPath(prayerId).build();
+        }
+
+        /** Read {@link #_ID} from {@link BaseColumns} {@link Uri}. */
+        public static String getPrayerId(Uri uri) {
+            return uri.getPathSegments().get(1);
+        }
+    }
 
     public static class Rounds implements RoundColumns, SyncColumns, BaseColumns {
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath("rounds").build();
