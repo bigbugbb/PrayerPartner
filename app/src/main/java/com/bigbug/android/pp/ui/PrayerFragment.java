@@ -5,6 +5,7 @@ import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Loader;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -12,6 +13,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +26,9 @@ import com.bigbug.android.pp.adapter.BaseAbstractRecyclerCursorAdapter;
 import com.bigbug.android.pp.data.model.Prayer;
 import com.bigbug.android.pp.provider.AppContract;
 import com.bigbug.android.pp.util.ThrottledContentObserver;
+import com.bumptech.glide.Glide;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -134,7 +138,7 @@ public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedL
         }
 
         switch (loader.getId()) {
-            case AppFragment.PartnersQuery.TOKEN_NORMAL: {
+            case AppFragment.PrayersQuery.TOKEN_NORMAL: {
                 mPrayerAdapter.changeCursor(data);
                 break;
             }
@@ -182,14 +186,7 @@ public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedL
          */
         @Override
         public void onBindViewHolder(ViewHolder holder, Cursor cursor) {
-            Prayer prayer = new Prayer(cursor);
-            holder.bindData(prayer);
-
-            if (cursor.isFirst()) {
-                for (OnPrayerItemSelectedListener listener : mListeners) {
-                    listener.onItemSelected(holder.itemView, holder.getLayoutPosition());
-                }
-            }
+            holder.bindData(new Prayer(cursor));
         }
 
         @Override
@@ -213,21 +210,24 @@ public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedL
 
             ViewHolder(final View view) {
                 super(view);
-                view.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        for (OnPrayerItemSelectedListener listener : mListeners) {
-                            listener.onItemSelected(view, getLayoutPosition());
-                        }
-                    }
-                });
-                mName = (TextView) view.findViewById(R.id.prayer_name);
-//                mEmail = (TextView) view.findViewById(R.id.prayer_email);
+                mName  = (TextView) view.findViewById(R.id.prayer_name);
+                mEmail = (TextView) view.findViewById(R.id.prayer_email);
                 mPhoto = (ImageView) view.findViewById(R.id.prayer_photo);
             }
 
             void bindData(final Prayer prayer) {
-
+                mName.setText(prayer.name);
+                mEmail.setText(prayer.email);
+                if (!TextUtils.isEmpty(prayer.photo)) {
+                    File photoFile = new File(prayer.photo);
+                    if (photoFile.exists() && photoFile.isFile()) {
+                        Glide.with(mContext)
+                                .load(Uri.fromFile(photoFile))
+                                .centerCrop()
+                                .crossFade(250)
+                                .into(mPhoto);
+                    }
+                }
             }
         }
     }

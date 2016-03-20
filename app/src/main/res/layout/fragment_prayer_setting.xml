@@ -15,10 +15,8 @@
         android:src="@drawable/ic_default_prayer"/>
 
     <LinearLayout
-        android:id="@+id/name_email_setting"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:animateLayoutChanges="true"
         android:orientation="vertical">
 
         <EditText

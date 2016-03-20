@@ -12,14 +12,13 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bigbug.android.pp.R;
-import com.bigbug.android.pp.data.model.Prayer;
 import com.bigbug.android.pp.provider.AppContract;
 
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
@@ -30,7 +29,6 @@ public class PrayerSettingDialog extends DialogFragment {
     private EditText mName;
     private EditText mEmail;
     private ImageView mPhoto;
-    private LinearLayout mNameEmailSetting;
 
     public PrayerSettingDialog() {
     }
@@ -45,16 +43,10 @@ public class PrayerSettingDialog extends DialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 // Do the data validation
                                 String name  = mName.getText().toString();
-                                String email = (String) mPhoto.getTag();
+                                String email = mEmail.getText().toString();
                                 if (TextUtils.isEmpty(name) || TextUtils.isEmpty(email)) {
-                                    TextView errorView = new TextView(getActivity());
-                                    errorView.setText(R.string.prayer_dialog_error_data);
-                                    errorView.setTextColor(Color.RED);
-                                    errorView.setTextAppearance(getActivity(), android.R.style.TextAppearance_Small);
-                                    errorView.setLayoutParams(new LinearLayout.LayoutParams(
-                                            LinearLayout.LayoutParams.MATCH_PARENT,
-                                            LinearLayout.LayoutParams.WRAP_CONTENT));
-                                    mNameEmailSetting.addView(errorView);
+                                    final String errorMsg = getString(R.string.prayer_dialog_error_data);
+                                    Toast.makeText(getActivity(), errorMsg, Toast.LENGTH_LONG).show();
                                     return;
                                 }
 
@@ -83,8 +75,6 @@ public class PrayerSettingDialog extends DialogFragment {
         mName = (EditText) container.findViewById(R.id.name_setting);
         mEmail = (EditText) container.findViewById(R.id.email_setting);
         mPhoto = (ImageView) container.findViewById(R.id.photo_setting);
-        mNameEmailSetting = (LinearLayout) container.findViewById(R.id.name_email_setting);
-
         mPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
