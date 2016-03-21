@@ -2,10 +2,8 @@ package com.bigbug.android.pp.gcm;
 
 import android.content.Intent;
 
-import com.google.android.gms.iid.InstanceIDListenerService;
 import com.bigbug.android.pp.util.PrefUtils;
-
-import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
+import com.google.android.gms.iid.InstanceIDListenerService;
 
 public class TrackerInstanceIDListenerService extends InstanceIDListenerService {
 

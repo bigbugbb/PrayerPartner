@@ -6,23 +6,23 @@ import android.content.OperationApplicationException;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 
-//import com.google.android.gms.maps.model.Tile;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
 import com.bigbug.android.pp.data.JSONHandler;
 import com.bigbug.android.pp.data.PartnersHandler;
 import com.bigbug.android.pp.provider.AppContract;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 
 import static com.bigbug.android.pp.util.LogUtils.LOGD;
 import static com.bigbug.android.pp.util.LogUtils.LOGE;
 import static com.bigbug.android.pp.util.LogUtils.LOGW;
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
+
+//import com.google.android.gms.maps.model.Tile;
 
 /**
  * Helper class that parses company data and imports them into the app's

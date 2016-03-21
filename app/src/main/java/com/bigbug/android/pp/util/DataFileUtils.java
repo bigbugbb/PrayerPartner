@@ -46,13 +46,9 @@ public class DataFileUtils {
     private static final int SUMMARY_COUNT = 24 * 60 * Config.MONITORING_DURATION_IN_SECONDS;
 
     public static String getSensorDataBaseDirPath(Context context) {
-        String dirPath;
-        if (Config.USE_EXTERNAL_DIRECTORY) {
-            dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + ".iTracker";
-            new File(dirPath).mkdirs();
-        } else {
-            dirPath = context.getFilesDir().getPath();
-        }
+        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + ".iTracker";
+        new File(dirPath).mkdirs();
+
         return new StringBuilder()
                 .append(dirPath)
                 .append(File.separator).append("data")

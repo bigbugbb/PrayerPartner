@@ -12,7 +12,11 @@
         android:layout_height="56dp"
         android:layout_marginRight="16dp"
         android:clickable="true"
-        android:src="@drawable/ic_default_prayer"/>
+        android:padding="1dp"
+        android:scaleType="centerCrop"
+        android:cropToPadding="true"
+        android:background="@drawable/border_image"
+        android:src="@drawable/ic_add_prayer_photo"/>
 
     <LinearLayout
         android:layout_width="match_parent"

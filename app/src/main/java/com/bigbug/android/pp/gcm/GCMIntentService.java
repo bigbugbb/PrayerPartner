@@ -23,7 +23,6 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 
-import com.google.android.gcm.GCMBaseIntentService;
 import com.bigbug.android.pp.Config;
 import com.bigbug.android.pp.R;
 import com.bigbug.android.pp.gcm.command.AnnouncementCommand;
@@ -33,6 +32,7 @@ import com.bigbug.android.pp.gcm.command.SyncUserCommand;
 import com.bigbug.android.pp.gcm.command.TestCommand;
 import com.bigbug.android.pp.ui.MainActivity;
 import com.bigbug.android.pp.util.AccountUtils;
+import com.google.android.gcm.GCMBaseIntentService;
 
 import java.util.Collections;
 import java.util.HashMap;

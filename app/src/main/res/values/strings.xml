@@ -154,7 +154,7 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="title_activity_footprint">Footprint</string>
+    <string name="title_activity_photo">Images</string>
     <string name="title_activity_sign_in">SignInActivity</string>
 
     <string name="prayer_setting_dialog_title">Prayer Setting</string>

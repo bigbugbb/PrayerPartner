@@ -1,24 +1,15 @@
 package com.bigbug.android.pp.monitor.processor;
 
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.SystemClock;
 
 import com.bigbug.android.pp.Config;
-import com.bigbug.android.pp.provider.AppContract;
 import com.bigbug.android.pp.util.DeviceUtils;
 
-import org.joda.time.DateTime;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.bigbug.android.pp.util.LogUtils.LOGI;
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
 
 /**

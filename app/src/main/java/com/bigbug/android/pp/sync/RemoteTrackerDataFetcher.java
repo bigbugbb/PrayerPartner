@@ -3,11 +3,11 @@ package com.bigbug.android.pp.sync;
 import android.content.Context;
 import android.text.TextUtils;
 
-import com.google.gson.Gson;
 import com.bigbug.android.pp.Config;
 import com.bigbug.android.pp.data.model.DataManifest;
 import com.bigbug.android.pp.util.DataFileUtils;
 import com.bigbug.android.pp.util.HashUtils;
+import com.google.gson.Gson;
 
 import org.apache.http.HttpResponse;
 

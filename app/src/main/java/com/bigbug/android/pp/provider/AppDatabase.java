@@ -6,9 +6,9 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.bigbug.android.pp.provider.AppContract.Partners;
 import com.bigbug.android.pp.provider.AppContract.Prayers;
 import com.bigbug.android.pp.provider.AppContract.Rounds;
-import com.bigbug.android.pp.provider.AppContract.Partners;
 import com.bigbug.android.pp.sync.SyncHelper;
 import com.bigbug.android.pp.sync.TrackerDataHandler;
 import com.bigbug.android.pp.util.AccountUtils;

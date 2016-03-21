@@ -1,0 +1,17 @@
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.PhotoFragment">
+
+    <com.bigbug.android.pp.ui.widget.CollectionView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/photos_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:internalPadding="4dp"
+        app:contentTopClearance="4dp"/>
+
+</android.support.design.widget.CoordinatorLayout>
+

@@ -12,9 +12,9 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
-import com.google.gson.Gson;
 import com.bigbug.android.pp.Config;
 import com.bigbug.android.pp.data.model.User;
+import com.google.gson.Gson;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -29,9 +29,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import static com.bigbug.android.pp.util.LogUtils.LOGD;
-import static com.bigbug.android.pp.util.LogUtils.LOGE;
-import static com.bigbug.android.pp.util.LogUtils.LOGI;
-import static com.bigbug.android.pp.util.LogUtils.LOGV;
 
 public class AccountUtils {
     private static final String TAG = LogUtils.makeLogTag(AccountUtils.class);

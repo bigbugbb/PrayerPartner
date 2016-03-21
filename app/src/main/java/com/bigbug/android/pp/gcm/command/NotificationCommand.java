@@ -22,11 +22,11 @@ import android.content.pm.PackageInfo;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 
-import com.google.gson.Gson;
 import com.bigbug.android.pp.R;
 import com.bigbug.android.pp.gcm.GCMCommand;
 import com.bigbug.android.pp.util.TimeUtils;
 import com.bigbug.android.pp.util.UIUtils;
+import com.google.gson.Gson;
 
 import java.util.Date;
 

@@ -15,9 +15,9 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.bigbug.android.pp.provider.AppContract.Partners;
 import com.bigbug.android.pp.provider.AppContract.Prayers;
 import com.bigbug.android.pp.provider.AppContract.Rounds;
-import com.bigbug.android.pp.provider.AppContract.Partners;
 import com.bigbug.android.pp.provider.AppDatabase.Tables;
 import com.bigbug.android.pp.util.AccountUtils;
 import com.bigbug.android.pp.util.SelectionBuilder;

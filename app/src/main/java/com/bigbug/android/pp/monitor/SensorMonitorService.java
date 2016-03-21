@@ -1,6 +1,5 @@
 package com.bigbug.android.pp.monitor;
 
-import android.Manifest;
 import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -9,7 +8,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -19,16 +17,15 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.bigbug.android.pp.Config;
 import com.bigbug.android.pp.R;
 import com.bigbug.android.pp.monitor.processor.SensorDataProcessor;
 import com.bigbug.android.pp.monitor.processor.SensorDataProcessorFactory;
 import com.bigbug.android.pp.ui.MainActivity;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.util.HashMap;
 import java.util.List;

@@ -20,10 +20,10 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.bigbug.android.pp.gcm.GCMCommand;
 import com.bigbug.android.pp.sync.TriggerSyncReceiver;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import static com.bigbug.android.pp.util.LogUtils.LOGI;
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;

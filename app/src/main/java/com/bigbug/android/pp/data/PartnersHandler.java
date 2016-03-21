@@ -4,11 +4,11 @@ import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.net.Uri;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.bigbug.android.pp.data.model.Partner;
 import com.bigbug.android.pp.provider.AppContract;
 import com.bigbug.android.pp.provider.AppContract.Partners;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 import java.util.HashMap;

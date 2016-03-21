@@ -2,10 +2,6 @@ package com.bigbug.android.pp;
 
 import android.text.format.DateUtils;
 
-import org.apache.commons.lang3.time.FastDateFormat;
-
-import java.text.Format;
-
 /**
  * Created by bigbug on 10/3/15.
  */
@@ -32,9 +28,6 @@ public class Config {
     public static final long MONITORING_INTERVAL_IN_MILLS = 1000 * 60;
     public static final int MONITORING_DURATION_IN_SECONDS = 10;
     public static final long MONITORING_DURATION_IN_MICROS = 1000 * 1000 * MONITORING_DURATION_IN_SECONDS;
-
-    // Data saver config
-    public static final boolean USE_EXTERNAL_DIRECTORY = true;
 
     // Values for the EventPoint feedback API. Sync happens at the same time as schedule sync,
     // and before that values are stored locally in the database.

@@ -8,6 +8,7 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 
 import com.bigbug.android.pp.data.model.Round;
 import com.bigbug.android.pp.provider.AppContract;
@@ -25,9 +26,6 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
     public static final String SELECTED_ROUND = "selected_track";
     public static final String BEGIN_DATE = "begin_date";
     public static final String END_DATE = "end_date";
-
-    protected long mBeginTime;
-    protected long mEndTime;
 
     protected Handler mHandler;
 
@@ -63,6 +61,11 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
             args.putParcelable(SELECTED_ROUND, round);
             loaderManager.restartLoader(PartnersQuery.TOKEN_NORMAL, args, callbacks);
         }
+    }
+
+    public static void reloadPhotos(LoaderManager loaderManager, LoaderCallbacks callbacks) {
+        Bundle args = new Bundle();
+        loaderManager.restartLoader(PhotosQuery.TOKEN_NORMAL, args, callbacks);
     }
 
     @Override
@@ -102,6 +105,16 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
                         AppContract.Partners.FIRST + " ASC");
                 break;
             }
+            case PhotosQuery.TOKEN_NORMAL: {
+                loader = new CursorLoader(
+                        getActivity(),
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        null,
+                        null,
+                        null,
+                        MediaStore.Images.Media.DATE_ADDED + " DESC");
+                break;
+            }
         }
 
         return loader;
@@ -125,5 +138,9 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
 
     protected interface PartnersQuery {
         int TOKEN_NORMAL = 300;
+    }
+
+    protected interface PhotosQuery {
+        int TOKEN_NORMAL = 400;
     }
 }

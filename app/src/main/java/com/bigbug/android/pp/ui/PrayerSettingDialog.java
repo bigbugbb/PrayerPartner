@@ -1,5 +1,6 @@
 package com.bigbug.android.pp.ui;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -7,15 +8,14 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Color;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bigbug.android.pp.R;
@@ -29,6 +29,9 @@ public class PrayerSettingDialog extends DialogFragment {
     private EditText mName;
     private EditText mEmail;
     private ImageView mPhoto;
+
+    public final static int REQUEST_PRAYER_PHOTO = 0;
+    public final static String PRAYER_PHOTO_URI = "prayer_photo_uri";
 
     public PrayerSettingDialog() {
     }
@@ -78,6 +81,8 @@ public class PrayerSettingDialog extends DialogFragment {
         mPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), PhotoActivity.class);
+                startActivityForResult(intent, REQUEST_PRAYER_PHOTO);
             }
         });
         return container;
@@ -85,5 +90,14 @@ public class PrayerSettingDialog extends DialogFragment {
 
     private ContentResolver getContentResolver() {
         return getActivity().getContentResolver();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_PRAYER_PHOTO && resultCode == Activity.RESULT_OK) {
+            Uri uri = data.getParcelableExtra(PRAYER_PHOTO_URI);
+            mPhoto.setImageURI(uri);
+            mPhoto.setTag(uri.getPath());
+        }
     }
 }

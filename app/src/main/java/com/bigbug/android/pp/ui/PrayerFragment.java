@@ -227,6 +227,8 @@ public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedL
                                 .crossFade(250)
                                 .into(mPhoto);
                     }
+                } else {
+                    mPhoto.setImageResource(R.drawable.ic_default_prayer);
                 }
             }
         }

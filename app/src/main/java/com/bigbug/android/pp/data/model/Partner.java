@@ -4,12 +4,7 @@ import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.bigbug.android.pp.Config;
 import com.bigbug.android.pp.provider.AppContract;
-
-import org.joda.time.DateTime;
-
-import java.util.Arrays;
 
 public final class Partner implements Parcelable {
 
