@@ -66,4 +66,9 @@
         <item name="android:textColorPrimary">?android:textColorPrimaryInverse</item>
     </style>
 
+    <!-- http://stackoverflow.com/questions/26804849/android-material-design-buttons-pre-lollipop -->
+    <style name="ColoredButton" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/colorAccent</item>
+    </style>
+
 </resources>

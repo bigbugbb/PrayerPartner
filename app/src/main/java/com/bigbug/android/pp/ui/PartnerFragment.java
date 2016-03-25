@@ -1,25 +1,36 @@
 package com.bigbug.android.pp.ui;
 
-import android.Manifest;
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Loader;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.ContextCompat;
-import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.ArrayAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.bigbug.android.pp.R;
+import com.bigbug.android.pp.data.model.Prayer;
+import com.bigbug.android.pp.provider.AppContract;
 import com.bigbug.android.pp.ui.widget.CollectionView;
 import com.bigbug.android.pp.util.ThrottledContentObserver;
+import com.bumptech.glide.Glide;
+
+import java.util.ArrayList;
 
 import static com.bigbug.android.pp.util.LogUtils.LOGD;
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
@@ -31,11 +42,19 @@ public class PartnerFragment extends AppFragment {
     private static final String TAG = makeLogTag(PartnerFragment.class);
 
     private CollectionView mPhotoCollectionView;
-//    private PhotoCollectionAdapter mPhotoCollectionAdapter;
+    private FloatingActionButton mFabMakePartner;
 
-    private FloatingActionButton mFabTakePhoto;
+    private ThrottledContentObserver mPrayersObserver;
+    private ThrottledContentObserver mPartnersObserver;
 
-    private ThrottledContentObserver mPhotosObserver;
+    private LinearLayout mPrayerSelector;
+    private GridView mPrayersGrid;
+    private PrayerAdapter mPrayerAdapter;
+
+    private ValueAnimator mPrayerSelectorPopupAnimator;
+    private ValueAnimator mPrayerSelectorSlipdownAnimator;
+
+    private int mFragmentHeight;
 
     public PartnerFragment() {
         // Required empty public constructor
@@ -45,24 +64,23 @@ public class PartnerFragment extends AppFragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
 
-        // Should be triggered after we taking a new photo
-        mPhotosObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
+        mPrayersObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
             @Override
             public void onThrottledContentObserverFired() {
                 LOGD(TAG, "ThrottledContentObserver fired (photos). Content changed.");
                 if (isAdded()) {
-                    LOGD(TAG, "Requesting photos cursor reload as a result of ContentObserver firing.");
-                    reloadPhotosWithRequiredPermission();
+                    LOGD(TAG, "Requesting prayers cursor reload as a result of ContentObserver firing.");
+                    reloadPrayers(getLoaderManager(), PartnerFragment.this);
                 }
             }
         });
-        activity.getContentResolver().registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, true, mPhotosObserver);
+        activity.getContentResolver().registerContentObserver(AppContract.Prayers.CONTENT_URI, true, mPrayersObserver);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        getActivity().getContentResolver().unregisterContentObserver(mPhotosObserver);
+        getActivity().getContentResolver().unregisterContentObserver(mPrayersObserver);
     }
 
     @Override
@@ -76,28 +94,65 @@ public class PartnerFragment extends AppFragment {
         // Inflate the layout for this fragment
         CoordinatorLayout root = (CoordinatorLayout) inflater.inflate(R.layout.fragment_partner, container, false);
         mPhotoCollectionView = (CollectionView) root.findViewById(R.id.photos_view);
-//        mPhotoCollectionAdapter = new PhotoCollectionAdapter();
-//        mPhotoCollectionView.setCollectionAdapter(mPhotoCollectionAdapter);
+
+        mPrayerSelector = (LinearLayout) root.findViewById(R.id.prayer_selector);
+        mPrayersGrid = (GridView) mPrayerSelector.findViewById(R.id.grid_prayers);
+
+        mPrayerAdapter = new PrayerAdapter(getActivity());
+        mPrayersGrid.setAdapter(mPrayerAdapter);
+
+        mFabMakePartner = (FloatingActionButton) root.findViewById(R.id.fab_make_partner);
+        mFabMakePartner.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mPrayerSelectorPopupAnimator != null) {
+                    mPrayerSelectorPopupAnimator.start();
+                    mFabMakePartner.hide();
+                }
+            }
+        });
+
+        mPrayerSelector.findViewById(R.id.cancel_selection).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPrayerSelectorSlipdownAnimator.start();
+            }
+        });
+        mPrayerSelector.findViewById(R.id.apply_selection).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPrayerSelectorSlipdownAnimator.start();
+            }
+        });
 
         return root;
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(final View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                mFragmentHeight = view.getHeight();
+                mPrayerSelector.setY(mFragmentHeight);
+                mPrayerSelectorPopupAnimator = createPrayerSelectorPopupAnimator();
+                mPrayerSelectorSlipdownAnimator = createPrayerSelectorSlipdownAnimator();
+            }
+        });
     }
 
     @Override
     public void onResume() {
         super.onResume();
         LOGD(TAG, "Reloading data as a result of onResume()");
-        reloadPhotosWithRequiredPermission();
+        reloadPrayers(getLoaderManager(), this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mPhotosObserver.cancelPendingCallback();
+        mPrayersObserver.cancelPendingCallback();
     }
 
     @Override
@@ -112,8 +167,9 @@ public class PartnerFragment extends AppFragment {
         }
 
         switch (loader.getId()) {
-            case AppFragment.PartnersQuery.TOKEN_NORMAL: {
-
+            case AppFragment.PrayersQuery.TOKEN_NORMAL: {
+                mPrayerAdapter.clear();
+                mPrayerAdapter.addAll(Prayer.prayersFromCursor(data));
                 break;
             }
         }
@@ -128,96 +184,86 @@ public class PartnerFragment extends AppFragment {
         }
     }
 
-    private void reloadPhotosWithRequiredPermission() {
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-//            reloadPhotos(getLoaderManager(), mBeginTime, mEndTime, this);
-        }
+    private ValueAnimator createPrayerSelectorPopupAnimator() {
+        final ValueAnimator animator = ObjectAnimator.ofFloat(mPrayerSelector, "y", mFragmentHeight * 0.4f)
+                .setDuration(500);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.addListener(new SimpleAnimatorListener());
+        return animator;
     }
 
-    private void updateInventoryDisplayColumns(CollectionView.Inventory inventory) {
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
-        for (CollectionView.InventoryGroup group : inventory) {
-            if (dpWidth < 400) {
-                group.setDisplayCols(3);
-            } else if (dpWidth < 600) {
-                group.setDisplayCols(4);
-            } else {
-                group.setDisplayCols(5);
+    private ValueAnimator createPrayerSelectorSlipdownAnimator() {
+        final ValueAnimator animator = ObjectAnimator.ofFloat(mPrayerSelector, "y", mFragmentHeight)
+                .setDuration(500);
+        animator.setStartDelay(0);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.addListener(new SimpleAnimatorListener() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mFabMakePartner.show();
+            }
+        });
+        return animator;
+    }
+
+    private static class PrayerAdapter extends ArrayAdapter<Prayer> {
+
+        public PrayerAdapter(Context context) {
+            super(context, 0, new ArrayList<Prayer>());
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_grid_prayer, null);
+            }
+
+            ViewHolder holder = (ViewHolder) convertView.getTag();
+            if (holder == null) {
+                holder = new ViewHolder();
+                holder.text  = (TextView) convertView.findViewById(R.id.prayer_name);
+                holder.image = (ImageView) convertView.findViewById(R.id.prayer_photo);
+                convertView.setTag(holder);
+            }
+            holder.updateViews(getItem(position));
+
+            return convertView;
+        }
+
+        class ViewHolder {
+            TextView  text;
+            ImageView image;
+
+            public void updateViews(final Prayer prayer) {
+                text.setText(prayer.name);
+                Glide.with(getContext())
+                        .load(prayer.photo)
+                        .centerCrop()
+                        .crossFade()
+                        .into(image);
             }
         }
     }
-//
-//    private static class PhotoCollectionAdapter implements CollectionViewCallbacks {
-//
-//        @Override
-//        public View newCollectionHeaderView(Context context, int groupId, ViewGroup parent) {
-//            return LayoutInflater.from(context).inflate(R.layout.photo_collection_header, parent, false);
-//        }
-//
-//        @Override
-//        public void bindCollectionHeaderView(Context context, View view, int groupId, String headerLabel, Object headerTag) {
-//            TextView photoDate = (TextView) view.findViewById(R.id.photo_date);
-//            photoDate.setText(getDateLabel((DateTime) headerTag));
-//        }
-//
-//        @Override
-//        public View newCollectionItemView(Context context, int groupId, ViewGroup parent) {
-//            final View view = LayoutInflater.from(context).inflate(R.layout.photo_collection_item, parent, false);
-//            final ItemViewHolder holder = new ItemViewHolder();
-//            holder.photoImage = (ImageView) view.findViewById(R.id.photo_image);
-//            view.setTag(holder);
-//            return view;
-//        }
-//
-//        @Override
-//        public void bindCollectionItemView(Context context, View view, int groupId, int indexInGroup, int dataIndex, Object itemTag) {
-//            final Object tag = view.getTag();
-//            if (tag instanceof ItemViewHolder) {
-//                final ItemViewHolder holder = (ItemViewHolder) tag;
-//                final Photo photo = (Photo) itemTag;
-//                if (holder.photoImage != null) {
-//                    Glide.with(context)
-//                            .load(photo.data)
-//                            .centerCrop()
-//                            .crossFade()
-//                            .into(holder.photoImage);
-//                }
-//            }
-//        }
-//
-//        private String getDateLabel(final DateTime date) {
-//            if (date == null) {
-//                return "";
-//            }
-//
-//            DateTime today = DateTime.now().withTimeAtStartOfDay();
-//            if (date.equals(today)) {
-//                return "Today";
-//            }
-//
-//            DateTime yesterday = today.minusDays(1).withTimeAtStartOfDay(); // For daytime saving adjustment
-//            if (date.equals(yesterday)) {
-//                return "Yesterday";
-//            }
-//
-//            StringBuilder sb = new StringBuilder()
-//                    .append(date.dayOfWeek().getAsText())
-//                    .append(", ")
-//                    .append(date.monthOfYear().getAsShortText())
-//                    .append(" ")
-//                    .append(date.dayOfMonth().getAsText());
-//
-//            if (date.year().get() != today.year().get()) {
-//                sb.append(", ").append(date.year().getAsText());
-//            }
-//
-//            return sb.toString();
-//        }
-//
-//        private static class ItemViewHolder {
-//            ImageView photoImage;
-//        }
-//    }
+
+    private int dpToPx(int dps) {
+        return Math.round(getResources().getDisplayMetrics().density * dps);
+    }
+
+    private class SimpleAnimatorListener implements Animator.AnimatorListener {
+        @Override
+        public void onAnimationStart(Animator animation) {
+        }
+
+        @Override
+        public void onAnimationEnd(Animator animation) {
+        }
+
+        @Override
+        public void onAnimationCancel(Animator animation) {
+        }
+
+        @Override
+        public void onAnimationRepeat(Animator animation) {
+        }
+    }
 }

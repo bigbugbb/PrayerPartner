@@ -160,4 +160,8 @@
     <string name="prayer_setting_dialog_title">Prayer Setting</string>
     <string name="prayer_dialog_error_data">Name and email can\'t be empty</string>
 
+    <string name="pair_partners">Pair Partners</string>
+    <string name="cancel_partner_pairing">Cancel</string>
+    <string name="apply_partner_pairing">Apply</string>
+
 </resources>

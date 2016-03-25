@@ -92,7 +92,6 @@ public class BaseActivity extends AppCompatActivity implements
     protected void requestPermissions() {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
@@ -141,21 +140,17 @@ public class BaseActivity extends AppCompatActivity implements
         final ActionBar ab = getSupportActionBar();
         ab.setDisplayShowHomeEnabled(true);
         ab.setDisplayUseLogoEnabled(true);
-
-//        ab.setDisplayShowCustomEnabled(true);
-//        ab.setDisplayShowTitleEnabled(true);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        requestPermissions();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        requestPermissions();
 
         PlayServicesUtils.checkGooglePlaySevices(this);
 
