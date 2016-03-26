@@ -1,30 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="wrap_content">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
+        android:layout_height="90dp"
+        android:background="@color/grid_image_background">
         <ImageView
-           android:id="@+id/prayer_photo"
-           android:layout_width="match_parent"
-           android:layout_height="90dp"
-           android:layout_gravity="center_horizontal"
-           android:scaleType="centerCrop"/>
+            android:id="@+id/prayer_photo"
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"/>
+        <ImageView
+            android:id="@+id/prayer_selected"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:alpha="0"
+            android:src="@drawable/ic_prayer_selected"/>
+    </FrameLayout>
 
-        <TextView
-            android:id="@+id/prayer_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textSize="12sp"
-            android:gravity="center"
-            android:ellipsize="end"/>
+    <TextView
+        android:id="@+id/prayer_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:ellipsize="end"/>
 
-    </LinearLayout>
-
-</FrameLayout>
+</LinearLayout>

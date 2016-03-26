@@ -1,8 +1,5 @@
 package com.bigbug.android.pp.ui;
 
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Loader;
@@ -16,7 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.animation.DecelerateInterpolator;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -50,9 +47,6 @@ public class PartnerFragment extends AppFragment {
     private LinearLayout mPrayerSelector;
     private GridView mPrayersGrid;
     private PrayerAdapter mPrayerAdapter;
-
-    private ValueAnimator mPrayerSelectorPopupAnimator;
-    private ValueAnimator mPrayerSelectorSlipdownAnimator;
 
     private int mFragmentHeight;
 
@@ -101,27 +95,49 @@ public class PartnerFragment extends AppFragment {
         mPrayerAdapter = new PrayerAdapter(getActivity());
         mPrayersGrid.setAdapter(mPrayerAdapter);
 
+        mPrayerSelector.setVisibility(View.INVISIBLE);
+
         mFabMakePartner = (FloatingActionButton) root.findViewById(R.id.fab_make_partner);
         mFabMakePartner.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mPrayerSelectorPopupAnimator != null) {
-                    mPrayerSelectorPopupAnimator.start();
-                    mFabMakePartner.hide();
-                }
+                mPrayerSelector.setY(mFragmentHeight * 0.6f);
+                mPrayerSelector.setVisibility(View.VISIBLE);
+                mPrayerSelector.animate().translationY(0).setDuration(500).start();
+                mFabMakePartner.hide();
             }
         });
 
         mPrayerSelector.findViewById(R.id.cancel_selection).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPrayerSelectorSlipdownAnimator.start();
+                mPrayerSelector.animate().translationY(mFragmentHeight * 0.6f).setDuration(500).start();
+                mFabMakePartner.show();
             }
         });
         mPrayerSelector.findViewById(R.id.apply_selection).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPrayerSelectorSlipdownAnimator.start();
+                mPrayerSelector.animate().translationY(mFragmentHeight * 0.6f).setDuration(500).start();
+                mFabMakePartner.show();
+            }
+        });
+
+        mPrayersGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                LOGD(TAG, String.format("item %d is clicked", position));
+                ImageView imageView = (ImageView) view.findViewById(R.id.prayer_photo);
+                View selected = view.findViewById(R.id.prayer_selected);
+                if (imageView.getTag(R.id.prayer_selected_tag) == Boolean.TRUE) {
+                    selected.animate().alpha(0).setDuration(250).start();
+                    imageView.setTag(R.id.prayer_selected_tag, Boolean.FALSE);
+                    imageView.animate().scaleX(1).scaleY(1).setDuration(250).start();
+                } else {
+                    selected.animate().alpha(1).setDuration(250).start();
+                    imageView.setTag(R.id.prayer_selected_tag, Boolean.TRUE);
+                    imageView.animate().scaleX(0.75f).scaleY(0.75f).setDuration(250).start();
+                }
             }
         });
 
@@ -135,9 +151,7 @@ public class PartnerFragment extends AppFragment {
             @Override
             public void onGlobalLayout() {
                 mFragmentHeight = view.getHeight();
-                mPrayerSelector.setY(mFragmentHeight);
-                mPrayerSelectorPopupAnimator = createPrayerSelectorPopupAnimator();
-                mPrayerSelectorSlipdownAnimator = createPrayerSelectorSlipdownAnimator();
+                mPrayerSelector.setPadding(0, Math.round(mFragmentHeight * 0.4f), 0, 0);
             }
         });
     }
@@ -184,28 +198,6 @@ public class PartnerFragment extends AppFragment {
         }
     }
 
-    private ValueAnimator createPrayerSelectorPopupAnimator() {
-        final ValueAnimator animator = ObjectAnimator.ofFloat(mPrayerSelector, "y", mFragmentHeight * 0.4f)
-                .setDuration(500);
-        animator.setInterpolator(new DecelerateInterpolator());
-        animator.addListener(new SimpleAnimatorListener());
-        return animator;
-    }
-
-    private ValueAnimator createPrayerSelectorSlipdownAnimator() {
-        final ValueAnimator animator = ObjectAnimator.ofFloat(mPrayerSelector, "y", mFragmentHeight)
-                .setDuration(500);
-        animator.setStartDelay(0);
-        animator.setInterpolator(new DecelerateInterpolator());
-        animator.addListener(new SimpleAnimatorListener() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mFabMakePartner.show();
-            }
-        });
-        return animator;
-    }
-
     private static class PrayerAdapter extends ArrayAdapter<Prayer> {
 
         public PrayerAdapter(Context context) {
@@ -230,7 +222,7 @@ public class PartnerFragment extends AppFragment {
             return convertView;
         }
 
-        class ViewHolder {
+        public class ViewHolder {
             TextView  text;
             ImageView image;
 
@@ -247,23 +239,5 @@ public class PartnerFragment extends AppFragment {
 
     private int dpToPx(int dps) {
         return Math.round(getResources().getDisplayMetrics().density * dps);
-    }
-
-    private class SimpleAnimatorListener implements Animator.AnimatorListener {
-        @Override
-        public void onAnimationStart(Animator animation) {
-        }
-
-        @Override
-        public void onAnimationEnd(Animator animation) {
-        }
-
-        @Override
-        public void onAnimationCancel(Animator animation) {
-        }
-
-        @Override
-        public void onAnimationRepeat(Animator animation) {
-        }
     }
 }
