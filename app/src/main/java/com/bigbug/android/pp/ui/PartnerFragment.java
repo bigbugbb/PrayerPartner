@@ -2,7 +2,6 @@ package com.bigbug.android.pp.ui;
 
 import android.app.Activity;
 import android.content.ContentProviderOperation;
-import android.content.Context;
 import android.content.Loader;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
@@ -12,24 +11,21 @@ import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bigbug.android.pp.R;
 import com.bigbug.android.pp.data.model.Prayer;
 import com.bigbug.android.pp.provider.AppContract;
-import com.bigbug.android.pp.ui.widget.CollectionView;
+import com.bigbug.android.pp.ui.widget.PrayerGridAdapter;
 import com.bigbug.android.pp.util.ThrottledContentObserver;
-import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +41,7 @@ import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
 public class PartnerFragment extends AppFragment {
     private static final String TAG = makeLogTag(PartnerFragment.class);
 
-    private CollectionView mPhotoCollectionView;
+    private RecyclerView mPartnerList;
     private FloatingActionButton mFabMakePartner;
 
     private ThrottledContentObserver mPrayersObserver;
@@ -53,13 +49,9 @@ public class PartnerFragment extends AppFragment {
 
     private LinearLayout mPrayerSelector;
     private GridView mPrayersGrid;
-    private PrayerAdapter mPrayerAdapter;
+    private PrayerGridAdapter mPrayerGridAdapter;
 
     private int mFragmentHeight;
-
-    private static final float IMAGE_SCALE_FACTOR = 0.75f;
-    private static final int IMAGE_SCALE_ANIM_DURATION = 250;
-    private static final int SELECT_ALPHA_ANIM_DURATION = 250;
 
     public PartnerFragment() {
         // Required empty public constructor
@@ -98,13 +90,13 @@ public class PartnerFragment extends AppFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         CoordinatorLayout root = (CoordinatorLayout) inflater.inflate(R.layout.fragment_partner, container, false);
-        mPhotoCollectionView = (CollectionView) root.findViewById(R.id.photos_view);
+        mPartnerList = (RecyclerView) root.findViewById(R.id.partner_list);
 
         mPrayerSelector = (LinearLayout) root.findViewById(R.id.prayer_selector);
         mPrayersGrid = (GridView) mPrayerSelector.findViewById(R.id.grid_prayers);
 
-        mPrayerAdapter = new PrayerAdapter(getActivity());
-        mPrayersGrid.setAdapter(mPrayerAdapter);
+        mPrayerGridAdapter = new PrayerGridAdapter(getActivity());
+        mPrayersGrid.setAdapter(mPrayerGridAdapter);
         mPrayersGrid.setEmptyView(root.findViewById(R.id.empty_view));
 
         mPrayerSelector.setVisibility(View.INVISIBLE);
@@ -117,7 +109,7 @@ public class PartnerFragment extends AppFragment {
                 mPrayerSelector.setVisibility(View.VISIBLE);
                 mPrayerSelector.animate().translationY(0).setDuration(500).start();
                 mFabMakePartner.hide();
-                mPrayerAdapter.notifyDataSetChanged();
+                mPrayerGridAdapter.notifyDataSetChanged();
             }
         });
 
@@ -150,9 +142,9 @@ public class PartnerFragment extends AppFragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 LOGD(TAG, String.format("item %d is clicked", position));
-                PrayerAdapter.PrayerState state = mPrayerAdapter.getItem(position);
+                PrayerGridAdapter.PrayerState state = mPrayerGridAdapter.getItem(position);
                 state.toggleSelection();
-                PrayerAdapter.ViewHolder holder = (PrayerAdapter.ViewHolder) view.getTag();
+                PrayerGridAdapter.ViewHolder holder = (PrayerGridAdapter.ViewHolder) view.getTag();
                 holder.updateViews(state, true);
             }
         });
@@ -200,8 +192,8 @@ public class PartnerFragment extends AppFragment {
             case AppFragment.PrayersQuery.TOKEN_NORMAL: {
                 final Prayer[] prayers = Prayer.prayersFromCursor(data);
                 if (prayers != null) {
-                    mPrayerAdapter.clear();
-                    mPrayerAdapter.addAll(prayersToPrayerStates(prayers));
+                    mPrayerGridAdapter.clear();
+                    mPrayerGridAdapter.addAll(prayersToPrayerStates(prayers));
                 }
                 break;
             }
@@ -217,18 +209,18 @@ public class PartnerFragment extends AppFragment {
         }
     }
 
-    private PrayerAdapter.PrayerState[] prayersToPrayerStates(Prayer[] prayers) {
-        PrayerAdapter.PrayerState[] states = new PrayerAdapter.PrayerState[prayers.length];
+    private PrayerGridAdapter.PrayerState[] prayersToPrayerStates(Prayer[] prayers) {
+        PrayerGridAdapter.PrayerState[] states = new PrayerGridAdapter.PrayerState[prayers.length];
         for (int i = 0; i < states.length; ++i) {
-            states[i] = new PrayerAdapter.PrayerState(prayers[i], false);
+            states[i] = new PrayerGridAdapter.PrayerState(prayers[i], false);
         }
         return states;
     }
 
     private int getSelectionCount() {
         int count = 0;
-        for (int i = 0; i < mPrayerAdapter.getCount(); ++i) {
-            if (mPrayerAdapter.getItem(i).isSelected()) {
+        for (int i = 0; i < mPrayerGridAdapter.getCount(); ++i) {
+            if (mPrayerGridAdapter.getItem(i).isSelected()) {
                 count++;
             }
         }
@@ -236,16 +228,16 @@ public class PartnerFragment extends AppFragment {
     }
 
     private void cancelSelection() {
-        for (int i = 0; i < mPrayerAdapter.getCount(); ++i) {
-            mPrayerAdapter.getItem(i).select(false);
+        for (int i = 0; i < mPrayerGridAdapter.getCount(); ++i) {
+            mPrayerGridAdapter.getItem(i).select(false);
         }
     }
 
     private void applySelection() {
         // Get selected prayers
-        List<Prayer> selectedPrayers = new ArrayList<>(mPrayerAdapter.getCount());
-        for (int i = 0; i < mPrayerAdapter.getCount(); ++i) {
-            PrayerAdapter.PrayerState state = mPrayerAdapter.getItem(i);
+        List<Prayer> selectedPrayers = new ArrayList<>(mPrayerGridAdapter.getCount());
+        for (int i = 0; i < mPrayerGridAdapter.getCount(); ++i) {
+            PrayerGridAdapter.PrayerState state = mPrayerGridAdapter.getItem(i);
             if (state.isSelected()) {
                 selectedPrayers.add(state.getPrayer());
                 state.select(false);
@@ -297,98 +289,5 @@ public class PartnerFragment extends AppFragment {
             list.set(i, list.get(p));
             list.set(p, t);
         }
-    }
-
-    private static class PrayerAdapter extends ArrayAdapter<PrayerAdapter.PrayerState> {
-
-        public PrayerAdapter(Context context) {
-            super(context, 0, new ArrayList<PrayerState>());
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_grid_prayer, null);
-            }
-
-            ViewHolder holder = (ViewHolder) convertView.getTag();
-            if (holder == null) {
-                holder = new ViewHolder();
-                holder.text   = (TextView) convertView.findViewById(R.id.prayer_name);
-                holder.image  = (ImageView) convertView.findViewById(R.id.prayer_photo);
-                holder.select = (ImageView) convertView.findViewById(R.id.prayer_selected);
-                convertView.setTag(holder);
-            }
-            holder.updateViews(getItem(position), false);
-
-            return convertView;
-        }
-
-        class ViewHolder {
-            private TextView  text;
-            private ImageView image;
-            private ImageView select;
-
-            public void updateViews(final PrayerState state, boolean animated) {
-                Prayer prayer = state.getPrayer();
-                text.setText(prayer.name);
-                if (state.isSelected()) {
-                    image.animate()
-                            .scaleX(IMAGE_SCALE_FACTOR)
-                            .scaleY(IMAGE_SCALE_FACTOR)
-                            .setDuration(animated ? IMAGE_SCALE_ANIM_DURATION : 0)
-                            .start();
-                    select.animate()
-                            .alpha(1)
-                            .setDuration(animated ? SELECT_ALPHA_ANIM_DURATION : 0)
-                            .start();
-                } else {
-                    image.animate()
-                            .scaleX(1)
-                            .scaleY(1)
-                            .setDuration(animated ? IMAGE_SCALE_ANIM_DURATION : 0)
-                            .start();
-                    select.animate()
-                            .alpha(0)
-                            .setDuration(animated ? SELECT_ALPHA_ANIM_DURATION : 0)
-                            .start();
-                }
-                Glide.with(getContext())
-                        .load(prayer.photo)
-                        .centerCrop()
-                        .crossFade()
-                        .into(image);
-            }
-        }
-
-        static class PrayerState {
-            private Prayer  mPrayer;
-            private boolean mSelected;
-
-            public PrayerState(Prayer prayer, boolean selected) {
-                mPrayer = prayer;
-                mSelected = selected;
-            }
-
-            public Prayer getPrayer() {
-                return mPrayer;
-            }
-
-            public boolean isSelected() {
-                return mSelected;
-            }
-
-            public void toggleSelection() {
-                mSelected = !mSelected;
-            }
-
-            public void select(boolean selected) {
-                mSelected = selected;
-            }
-        }
-    }
-
-    private int dpToPx(int dps) {
-        return Math.round(getResources().getDisplayMetrics().density * dps);
     }
 }
