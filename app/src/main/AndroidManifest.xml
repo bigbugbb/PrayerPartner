@@ -34,7 +34,7 @@
         android:name="com.bigbug.android.pp.permission.C2D_MESSAGE"
         android:protectionLevel="signature"/>
 
-    <uses-permission android:name="com.localytics.android.itracker.permission.C2D_MESSAGE"/>
+    <uses-permission android:name="com.bigbug.android.pp.permission.C2D_MESSAGE"/>
 
     <application
         android:name=".Application"
@@ -145,8 +145,8 @@
             android:name=".monitor.PPBroadcastReceiver"
             android:label="@string/app_name">
             <intent-filter>
-                <action android:name="com.localytics.android.itracker.intent.action.START_SENSOR_MONITOR"/>
-                <action android:name="com.localytics.android.itracker.intent.action.BOOTSTRAP_MONITOR_ALARM"/>
+                <action android:name="com.bigbug.android.pp.intent.action.START_SENSOR_MONITOR"/>
+                <action android:name="com.bigbug.android.pp.intent.action.BOOTSTRAP_MONITOR_ALARM"/>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="android.intent.action.ACTION_USER_PRESENT"/>
                 <action android:name="android.intent.action.ACTION_SCREEN_OFF"/>
@@ -207,7 +207,7 @@
         <!-- <intent-filter> -->
         <!-- <action android:name="com.google.android.c2dm.intent.REGISTRATION" /> -->
         <!-- <action android:name="com.google.android.c2dm.intent.RECEIVE" /> -->
-        <!-- <category android:name="com.localytics.android.itracker" /> -->
+        <!-- <category android:name="com.bigbug.android.pp" /> -->
         <!-- </intent-filter> -->
         <!-- </receiver> -->
         <!-- [END Localytics Integration] -->

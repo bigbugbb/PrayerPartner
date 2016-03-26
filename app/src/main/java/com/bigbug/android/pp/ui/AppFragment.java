@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
 
-import com.bigbug.android.pp.data.model.Round;
 import com.bigbug.android.pp.provider.AppContract;
 
 import static com.bigbug.android.pp.util.LogUtils.LOGD;
@@ -50,17 +49,14 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
         loaderManager.restartLoader(PrayersQuery.TOKEN_NORMAL, args, callbacks);
     }
 
-    public static void reloadRounds(LoaderManager loaderManager, LoaderCallbacks callbacks) {
+    public static void reloadPartners(LoaderManager loaderManager, LoaderCallbacks callbacks) {
         Bundle args = new Bundle();
-        loaderManager.restartLoader(RoundsQuery.TOKEN_NORMAL, args, callbacks);
+        loaderManager.restartLoader(PartnersQuery.TOKEN_NORMAL, args, callbacks);
     }
 
-    public static void reloadPartners(LoaderManager loaderManager, Round round, LoaderCallbacks callbacks) {
-        if (round != null) {
-            Bundle args = new Bundle();
-            args.putParcelable(SELECTED_ROUND, round);
-            loaderManager.restartLoader(PartnersQuery.TOKEN_NORMAL, args, callbacks);
-        }
+    public static void reloadPartnerPrayers(LoaderManager loaderManager, LoaderCallbacks callbacks) {
+        Bundle args = new Bundle();
+        loaderManager.restartLoader(PartnersQuery.TOKEN_NORMAL, args, callbacks);
     }
 
     public static void reloadPhotos(LoaderManager loaderManager, LoaderCallbacks callbacks) {
@@ -84,25 +80,14 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
                         AppContract.Prayers.NAME);
                 break;
             }
-            case RoundsQuery.TOKEN_NORMAL: {
-                loader = new CursorLoader(
-                        getActivity(),
-                        AppContract.Rounds.CONTENT_URI,
-                        null,
-                        null,
-                        new String[]{ args.getLong(BEGIN_DATE) + "", args.getLong(END_DATE) + "" },
-                        AppContract.Rounds.TIME + " DESC");
-                break;
-            }
             case PartnersQuery.TOKEN_NORMAL: {
-                Round track = args.getParcelable(SELECTED_ROUND);
                 loader = new CursorLoader(
                         getActivity(),
                         AppContract.Partners.CONTENT_URI,
                         null,
-                        AppContract.Partners.SELECTION_BY_ROUND_ID,
-                        new String[]{ track.id + "" },
-                        AppContract.Partners.FIRST + " ASC");
+                        null,
+                        null,
+                        AppContract.Partners.CREATED + " DESC");
                 break;
             }
             case PhotosQuery.TOKEN_NORMAL: {
@@ -132,11 +117,11 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
         int TOKEN_NORMAL = 100;
     }
 
-    protected interface RoundsQuery {
+    protected interface PartnersQuery {
         int TOKEN_NORMAL = 200;
     }
 
-    protected interface PartnersQuery {
+    protected interface PartnerPrayersQuery {
         int TOKEN_NORMAL = 300;
     }
 

@@ -58,7 +58,8 @@ public class PrayerSettingDialog extends DialogFragment {
                                 values.put(AppContract.Prayers.NAME, mName.getText().toString());
                                 values.put(AppContract.Prayers.EMAIL, mEmail.getText().toString());
                                 values.put(AppContract.Prayers.PHOTO, (String) mPhoto.getTag());
-                                values.put(AppContract.SyncColumns.UPDATED, System.currentTimeMillis());
+                                values.put(AppContract.TimeColumns.UPDATED, System.currentTimeMillis());
+                                values.put(AppContract.TimeColumns.CREATED, System.currentTimeMillis());
                                 getContentResolver().insert(AppContract.Prayers.CONTENT_URI, values);
                             }
                         }

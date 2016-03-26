@@ -1,15 +1,12 @@
 package com.bigbug.android.pp.ui;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Loader;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +41,7 @@ public class HistoryFragment extends AppFragment {
                 LOGD(TAG, "ThrottledContentObserver fired (photos). Content changed.");
                 if (isAdded()) {
                     LOGD(TAG, "Requesting photos cursor reload as a result of ContentObserver firing.");
-                    reloadPhotosWithRequiredPermission();
+                    reloadPartners(getLoaderManager(), HistoryFragment.this);
                 }
             }
         });
@@ -82,7 +79,6 @@ public class HistoryFragment extends AppFragment {
     public void onResume() {
         super.onResume();
         LOGD(TAG, "Reloading data as a result of onResume()");
-        reloadPhotosWithRequiredPermission();
     }
 
     @Override
@@ -103,7 +99,7 @@ public class HistoryFragment extends AppFragment {
         }
 
         switch (loader.getId()) {
-            case AppFragment.RoundsQuery.TOKEN_NORMAL: {
+            case AppFragment.PartnersQuery.TOKEN_NORMAL: {
 //                CollectionView.Inventory photoInventory = Round.photoInventoryFromCursor(data);
 //                if (photoInventory != null) {
 //                    updateInventoryDisplayColumns(photoInventory);
@@ -117,16 +113,9 @@ public class HistoryFragment extends AppFragment {
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         switch (loader.getId()) {
-            case AppFragment.RoundsQuery.TOKEN_NORMAL: {
+            case AppFragment.PartnersQuery.TOKEN_NORMAL: {
                 break;
             }
-        }
-    }
-
-    private void reloadPhotosWithRequiredPermission() {
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            reloadRounds(getLoaderManager(), this);
         }
     }
 }

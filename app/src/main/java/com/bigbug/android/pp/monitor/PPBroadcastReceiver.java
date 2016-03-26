@@ -27,8 +27,8 @@ public class PPBroadcastReceiver extends WakefulBroadcastReceiver {
 
     public static final int REQUEST_CODE = 100;
 
-    public static final String ACTION_START_SENSOR_MONITOR = "com.localytics.android.itracker.intent.action.START_SENSOR_MONITOR";
-    public static final String ACTION_BOOTSTRAP_MONITOR_ALARM = "com.localytics.android.itracker.intent.action.BOOTSTRAP_MONITOR_ALARM";
+    public static final String ACTION_START_SENSOR_MONITOR = "com.bigbug.android.pp.intent.action.START_SENSOR_MONITOR";
+    public static final String ACTION_BOOTSTRAP_MONITOR_ALARM = "com.bigbug.android.pp.intent.action.BOOTSTRAP_MONITOR_ALARM";
 
     public void setAlarm(Context context, long delayTimeMills) {
         Intent contentIntent = new Intent(context, PPBroadcastReceiver.class);

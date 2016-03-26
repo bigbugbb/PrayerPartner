@@ -15,9 +15,9 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.bigbug.android.pp.provider.AppContract.PartnerPrayers;
 import com.bigbug.android.pp.provider.AppContract.Partners;
 import com.bigbug.android.pp.provider.AppContract.Prayers;
-import com.bigbug.android.pp.provider.AppContract.Rounds;
 import com.bigbug.android.pp.provider.AppDatabase.Tables;
 import com.bigbug.android.pp.util.AccountUtils;
 import com.bigbug.android.pp.util.SelectionBuilder;
@@ -46,11 +46,11 @@ public class AppProvider extends ContentProvider {
     private static final int PRAYERS = 100;
     private static final int PRAYERS_ID = 101;
 
-    private static final int ROUNDS = 200;
-    private static final int ROUNDS_ID = 201;
+    private static final int PARTNERS = 200;
+    private static final int PARTNERS_ID = 201;
 
-    private static final int PARTNERS = 300;
-    private static final int PARTNERS_ID = 301;
+    private static final int PARTNER_PRAYERS = 300;
+    private static final int PARTNER_PRAYERS_ID = 301;
 
     /**
      * Build and return a {@link UriMatcher} that catches all {@link Uri}
@@ -63,11 +63,11 @@ public class AppProvider extends ContentProvider {
         matcher.addURI(authority, "prayers", PRAYERS);
         matcher.addURI(authority, "prayers/*", PRAYERS_ID);
 
-        matcher.addURI(authority, "rounds", ROUNDS);
-        matcher.addURI(authority, "rounds/*", ROUNDS_ID);
-
         matcher.addURI(authority, "partners", PARTNERS);
         matcher.addURI(authority, "partners/*", PARTNERS_ID);
+
+        matcher.addURI(authority, "partner_prayers", PARTNER_PRAYERS);
+        matcher.addURI(authority, "partner_prayers/*", PARTNER_PRAYERS_ID);
 
         return matcher;
     }
@@ -180,14 +180,14 @@ public class AppProvider extends ContentProvider {
                 return Prayers.CONTENT_TYPE;
             case PRAYERS_ID:
                 return Prayers.CONTENT_ITEM_TYPE;
-            case ROUNDS:
-                return Rounds.CONTENT_TYPE;
-            case ROUNDS_ID:
-                return Rounds.CONTENT_ITEM_TYPE;
             case PARTNERS:
                 return Partners.CONTENT_TYPE;
             case PARTNERS_ID:
                 return Partners.CONTENT_ITEM_TYPE;
+            case PARTNER_PRAYERS:
+                return PartnerPrayers.CONTENT_TYPE;
+            case PARTNER_PRAYERS_ID:
+                return PartnerPrayers.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -243,12 +243,12 @@ public class AppProvider extends ContentProvider {
                 table = Tables.PRAYERS;
                 break;
             }
-            case ROUNDS: {
-                table = Tables.ROUNDS;
-                break;
-            }
             case PARTNERS: {
                 table = Tables.PARTNERS;
+                break;
+            }
+            case PARTNER_PRAYERS: {
+                table = Tables.PARTNER_PRAYERS;
                 break;
             }
             default: {
@@ -286,15 +286,15 @@ public class AppProvider extends ContentProvider {
                 notifyChange(uri);
                 return Prayers.buildPrayerUri("" + newId);
             }
-            case ROUNDS: {
-                long newId = db.insertOrThrow(Tables.ROUNDS, null, values);
-                notifyChange(uri);
-                return Rounds.buildRoundUri("" + newId);
-            }
             case PARTNERS: {
                 long newId = db.insertOrThrow(Tables.PARTNERS, null, values);
                 notifyChange(uri);
                 return Partners.buildPartnerUri("" + newId);
+            }
+            case PARTNER_PRAYERS: {
+                long newId = db.insertOrThrow(Tables.PARTNER_PRAYERS, null, values);
+                notifyChange(uri);
+                return PartnerPrayers.buildPartnerPrayerUri("" + newId);
             }
             default: {
                 throw new UnsupportedOperationException("Unknown insert uri: " + uri);
@@ -348,19 +348,19 @@ public class AppProvider extends ContentProvider {
                 final String id = Prayers.getPrayerId(uri);
                 return builder.table(Tables.PRAYERS).where(Prayers._ID + "=?", id);
             }
-            case ROUNDS: {
-                return builder.table(Tables.ROUNDS);
-            }
-            case ROUNDS_ID: {
-                final String id = Rounds.getRoundId(uri);
-                return builder.table(Tables.ROUNDS).where(Rounds._ID + "=?", id);
-            }
             case PARTNERS: {
                 return builder.table(Tables.PARTNERS);
             }
             case PARTNERS_ID: {
                 final String id = Partners.getPartnerId(uri);
                 return builder.table(Tables.PARTNERS).where(Partners._ID + "=?", id);
+            }
+            case PARTNER_PRAYERS: {
+                return builder.table(Tables.PARTNER_PRAYERS);
+            }
+            case PARTNER_PRAYERS_ID: {
+                final String id = PartnerPrayers.getPartnerPrayerId(uri);
+                return builder.table(Tables.PARTNER_PRAYERS).where(PartnerPrayers._ID + "=?", id);
             }
             default: {
                 throw new UnsupportedOperationException("Unknown uri for " + match + ": " + uri);
@@ -383,19 +383,19 @@ public class AppProvider extends ContentProvider {
                 final String prayerId = Prayers.getPrayerId(uri);
                 return builder.table(Tables.PRAYERS).where(Prayers._ID + "=?", prayerId);
             }
-            case ROUNDS: {
-                return builder.table(Tables.ROUNDS);
-            }
-            case ROUNDS_ID: {
-                final String roundId = Rounds.getRoundId(uri);
-                return builder.table(Tables.ROUNDS).where(Rounds._ID + "=?", roundId);
-            }
             case PARTNERS: {
                 return builder.table(Tables.PARTNERS);
             }
             case PARTNERS_ID: {
                 final String partnerId = Partners.getPartnerId(uri);
                 return builder.table(Tables.PARTNERS).where(Partners._ID + "=?", partnerId);
+            }
+            case PARTNER_PRAYERS: {
+                return builder.table(Tables.PARTNER_PRAYERS);
+            }
+            case PARTNER_PRAYERS_ID: {
+                final String id = PartnerPrayers.getPartnerPrayerId(uri);
+                return builder.table(Tables.PARTNER_PRAYERS).where(PartnerPrayers._ID + "=?", id);
             }
             default: {
                 throw new UnsupportedOperationException("Unknown uri: " + uri);

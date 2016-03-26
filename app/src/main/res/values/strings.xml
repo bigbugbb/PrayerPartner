@@ -162,6 +162,10 @@
 
     <string name="pair_partners">Pair Partners</string>
     <string name="cancel_partner_pairing">Cancel</string>
-    <string name="apply_partner_pairing">Apply</string>
+    <string name="apply_partner_pairing">Pair</string>
+    <string name="no_prayers_available">NO PRAYERS AVAILABLE!</string>
+
+    <string name="no_prayer_selected">Can\'t pair with empty prayer.</string>
+    <string name="odd_prayers_count">Selected prayers number must be even.</string>
 
 </resources>

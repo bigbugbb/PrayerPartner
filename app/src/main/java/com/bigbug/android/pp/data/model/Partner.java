@@ -3,25 +3,25 @@ package com.bigbug.android.pp.data.model;
 import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.provider.BaseColumns;
 
 import com.bigbug.android.pp.provider.AppContract;
 
 public final class Partner implements Parcelable {
 
-    public String first;
-    public String second;
-    public String round_id;
+    public long id;
+    public long created;
+    public long updated;
 
     public Partner() {
     }
 
     public Partner(Cursor cursor) {
-        first = cursor.getString(cursor.getColumnIndex(AppContract.Partners.FIRST));
-        second = cursor.getString(cursor.getColumnIndex(AppContract.Partners.SECOND));
-        round_id = cursor.getString(cursor.getColumnIndex(AppContract.Partners.ROUND_ID));
+        id      = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID));
+        created = cursor.getLong(cursor.getColumnIndex(AppContract.Partners.CREATED));
+        updated = cursor.getLong(cursor.getColumnIndex(AppContract.Partners.UPDATED));
     }
 
-    // The cursor window should be larger than the whole block of data.
     public static Partner[] partnersFromCursor(Cursor cursor) {
         if (cursor != null && cursor.moveToFirst()) {
             final int size = cursor.getCount();
@@ -44,15 +44,15 @@ public final class Partner implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(first);
-        dest.writeString(second);
-        dest.writeString(round_id);
+        dest.writeLong(id);
+        dest.writeLong(created);
+        dest.writeLong(updated);
     }
 
     private Partner(Parcel in) {
-        first = in.readString();
-        second = in.readString();
-        round_id = in.readString();
+        id      = in.readLong();
+        created = in.readLong();
+        updated = in.readLong();
     }
 
     public static final Creator<Partner> CREATOR = new Creator<Partner>() {
