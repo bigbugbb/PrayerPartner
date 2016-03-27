@@ -39,6 +39,9 @@ public class AppDatabase extends SQLiteOpenHelper {
         String PAIRS = "pairs";
         String PRAYERS = "prayers";
         String PAIR_PRAYERS = "pair_prayers";
+        String PRAYERS_JOIN_PAIR_THROUGH_PAIR_PRAYERS = "prayers "
+                + "LEFT OUTER JOIN pair_prayers ON prayers._id=pair_prayers.prayer_id "
+                + "LEFT OUTER JOIN pairs ON pair_prayers.pair_id=pairs._id";
     }
 
     interface FOREIGN_KEY {

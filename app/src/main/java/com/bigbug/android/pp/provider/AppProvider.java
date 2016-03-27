@@ -144,10 +144,16 @@ public class AppProvider extends ContentProvider {
                     " selection=" + selection + " args=" + Arrays.toString(selectionArgs) + ")");
         }
 
+        SelectionBuilder builder = null;
         switch (match) {
+            case PRAYERS: {
+                builder = buildExpandedSelection(uri, match);
+            }
             default: {
                 // Most cases are handled with simple SelectionBuilder
-                final SelectionBuilder builder = buildExpandedSelection(uri, match);
+                if (builder == null) {
+                    builder = buildSimpleSelection(uri);
+                }
 
                 boolean distinct = !TextUtils.isEmpty(uri.getQueryParameter(AppContract.QUERY_PARAMETER_DISTINCT));
 
@@ -399,30 +405,24 @@ public class AppProvider extends ContentProvider {
     private SelectionBuilder buildExpandedSelection(Uri uri, int match) {
         final SelectionBuilder builder = new SelectionBuilder();
         switch (match) {
-            case APP_INFO: {
-                return builder.table(Tables.APP_INFO);
-            }
-            case PRAYERS: {
-                return builder.table(Tables.PRAYERS);
-            }
-            case PRAYERS_ID: {
-                final String id = Prayers.getPrayerId(uri);
-                return builder.table(Tables.PRAYERS).where(Prayers._ID + "=?", id);
-            }
-            case PAIRS: {
-                return builder.table(Tables.PAIRS);
-            }
-            case PAIRS_ID: {
-                final String id = Pairs.getPairId(uri);
-                return builder.table(Tables.PAIRS).where(Pairs._ID + "=?", id);
-            }
-            case PAIR_PRAYERS: {
-                return builder.table(Tables.PAIR_PRAYERS);
-            }
-            case PAIR_PRAYERS_ID: {
-                final String id = PairPrayers.getPairPrayerId(uri);
-                return builder.table(Tables.PAIR_PRAYERS).where(PairPrayers._ID + "=?", id);
-            }
+            case PRAYERS:
+                String pairId = uri.getQueryParameter(Prayers.QUERY_PARAMETER_PAIR_ID);
+                if (TextUtils.isEmpty(pairId)) {
+                    return builder.table(Tables.PRAYERS);
+                } else {
+                    if (pairId.equals(Prayers.DEFAULT_PAIR_ID)) {
+                        final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+                        Cursor cursor = db.query(Tables.APP_INFO, null, null, null, null, null, null);
+                        if (cursor.moveToFirst()) {
+                            pairId = cursor.getString(cursor.getColumnIndex(AppInfo.LAST_PAIR_ID));
+                        }
+                    }
+                    return builder.table(Tables.PRAYERS_JOIN_PAIR_THROUGH_PAIR_PRAYERS)
+                            .mapToTable(Prayers._ID, Tables.PRAYERS)
+                            .mapToTable(Pairs._ID, Tables.PAIRS)
+                            .where(Prayers.QUERY_PARAMETER_PAIR_ID + "=?", pairId);
+//                            .groupBy(PairPrayers.PARTNER_ID);
+                }
             default: {
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
             }

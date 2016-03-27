@@ -5,6 +5,7 @@ import android.content.ContentProviderOperation;
 import android.content.Loader;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
@@ -45,7 +46,7 @@ public class PartnerFragment extends AppFragment {
     private FloatingActionButton mFabMakePartner;
 
     private ThrottledContentObserver mPrayersObserver;
-    private ThrottledContentObserver mPartnersObserver;
+    private ThrottledContentObserver mLatestPairedPrayersObserver;
 
     private LinearLayout mPrayerSelector;
     private GridView mPrayersGrid;
@@ -73,22 +74,24 @@ public class PartnerFragment extends AppFragment {
         });
         activity.getContentResolver().registerContentObserver(AppContract.Prayers.CONTENT_URI, true, mPrayersObserver);
 
-        mPartnersObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
+        mLatestPairedPrayersObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
             @Override
             public void onThrottledContentObserverFired() {
-                LOGD(TAG, "ThrottledContentObserver fired (partners). Content changed.");
+                LOGD(TAG, "ThrottledContentObserver fired (pair_prayers). Content changed.");
                 if (isAdded()) {
                     LOGD(TAG, "Requesting partners cursor reload as a result of ContentObserver firing.");
-                    reloadPairs(getLoaderManager(), PartnerFragment.this);
+                    reloadPairedPrayers(getLoaderManager(), null, PartnerFragment.this);
                 }
             }
         });
+        activity.getContentResolver().registerContentObserver(AppContract.PairPrayers.CONTENT_URI, true, mLatestPairedPrayersObserver);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         getActivity().getContentResolver().unregisterContentObserver(mPrayersObserver);
+        getActivity().getContentResolver().unregisterContentObserver(mLatestPairedPrayersObserver);
     }
 
     @Override
@@ -180,6 +183,7 @@ public class PartnerFragment extends AppFragment {
         super.onResume();
         LOGD(TAG, "Reloading data as a result of onResume()");
         reloadPrayers(getLoaderManager(), this);
+        reloadPairedPrayers(getLoaderManager(), null, this);
     }
 
     @Override
@@ -200,11 +204,20 @@ public class PartnerFragment extends AppFragment {
         }
 
         switch (loader.getId()) {
-            case AppFragment.PrayersQuery.TOKEN_NORMAL: {
+            case PrayersQuery.TOKEN_NORMAL: {
                 final Prayer[] prayers = Prayer.prayersFromCursor(data);
                 if (prayers != null) {
                     mPrayerGridAdapter.clear();
                     mPrayerGridAdapter.addAll(prayersToPrayerStates(prayers));
+                }
+                break;
+            }
+            case PrayersQuery.TOKEN_SEARCH: {
+                if (data != null && data.moveToFirst()) {
+                    LOGD(TAG, "PrayersQuery.TOKEN_SEARCH");
+                    do {
+                        DatabaseUtils.dumpCurrentRow(data);
+                    } while (data.moveToNext());
                 }
                 break;
             }

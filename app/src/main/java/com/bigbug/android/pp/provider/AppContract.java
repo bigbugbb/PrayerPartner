@@ -84,6 +84,9 @@ public class AppContract {
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.prayer";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.prayer";
 
+        public static final String DEFAULT_PAIR_ID = "latest";
+        public static final String QUERY_PARAMETER_PAIR_ID = "pair_id";
+
         /** Build a {@link Uri} that references a given prayer. */
         public static Uri buildPrayerUri(String prayerId) {
             return CONTENT_URI.buildUpon().appendPath(prayerId).build();
@@ -92,6 +95,11 @@ public class AppContract {
         /** Read {@link #_ID} from {@link BaseColumns} {@link Uri}. */
         public static String getPrayerId(Uri uri) {
             return uri.getPathSegments().get(1);
+        }
+
+        /** Build a {@link Uri} that references all prayers for a given pair event. */
+        public static Uri buildPairedPrayersUri(String pairId) {
+            return CONTENT_URI.buildUpon().appendQueryParameter(QUERY_PARAMETER_PAIR_ID, pairId).build();
         }
     }
 
