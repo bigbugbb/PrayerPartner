@@ -239,7 +239,7 @@ public class AppProvider extends ContentProvider {
         // more intelligently than we can -- for example, doing it only once at the end
         // of the sync instead of issuing thousands of notifications for each record).
         boolean syncToNetwork = !AppContract.hasCallerIsSyncAdapterParameter(uri);
-        if (syncToNetwork && !isInBatchMode()) {
+        if (syncToNetwork) {
             Context context = getContext();
             context.getContentResolver().notifyChange(uri, null);
 

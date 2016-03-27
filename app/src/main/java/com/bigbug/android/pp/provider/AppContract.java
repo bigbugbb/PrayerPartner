@@ -97,7 +97,7 @@ public class AppContract {
             return uri.getPathSegments().get(1);
         }
 
-        /** Build a {@link Uri} that references all prayers for a given pair event. */
+        /** Build a {@link Uri} that references all prayers for a given pair session. */
         public static Uri buildPairedPrayersUri(String pairId) {
             return CONTENT_URI.buildUpon().appendQueryParameter(QUERY_PARAMETER_PAIR_ID, pairId).build();
         }

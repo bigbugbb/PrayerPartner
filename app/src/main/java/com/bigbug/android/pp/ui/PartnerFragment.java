@@ -266,12 +266,14 @@ public class PartnerFragment extends AppFragment {
         // Pair prayers randomly (now only need to support two prayers into one partner group)
         shuffle(selectedPrayers);
 
-        // Build and apply the operations to create a new partner and its associated pairs.
+        /**
+         *  Build and apply the operations to create a new partner and its associated pairs.
+         */
         new Thread(new Runnable() {
             @Override
             public void run() {
-                long appInfoId = 0;
-                long lastPartnerId = 0;
+                // Get the last partner id.
+                long appInfoId = 0, lastPartnerId = 0;
                 Cursor cursor = getActivity().getContentResolver().query(AppContract.AppInfo.CONTENT_URI, null, null, null, null);
                 try {
                     if (cursor != null && cursor.moveToFirst()) {
@@ -286,11 +288,13 @@ public class PartnerFragment extends AppFragment {
 
                 long now = System.currentTimeMillis();
                 ArrayList<ContentProviderOperation> ops = new ArrayList<>(selectedPrayers.size() / 2 + 1);
+                // Make a new pair session.
                 ops.add(ContentProviderOperation
                         .newInsert(AppContract.Pairs.CONTENT_URI)
                         .withValue(AppContract.TimeColumns.UPDATED, now)
                         .withValue(AppContract.TimeColumns.CREATED, now)
                         .build());
+                // Every two prayers are paired as a partner group.
                 for (int i = 0; i < selectedPrayers.size(); i += 2) {
                     lastPartnerId++;
                     ops.add(ContentProviderOperation
@@ -310,6 +314,7 @@ public class PartnerFragment extends AppFragment {
                             .withValue(AppContract.TimeColumns.CREATED, now)
                             .build());
                 }
+                // Update the last pair id and partner id.
                 ops.add(ContentProviderOperation.newUpdate(AppContract.AppInfo.buildAppInfoUri("" + appInfoId))
                         .withValueBackReference(AppContract.AppInfo.LAST_PAIR_ID, 0)
                         .withValue(AppContract.AppInfo.LAST_PARTNER_ID, lastPartnerId)
