@@ -16,12 +16,12 @@
         android:layout_centerHorizontal="true"/>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_make_partner"
+        android:id="@+id/fab_pair_partner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_fab_photo"/>
+        android:src="@drawable/ic_fab_pair_partner"/>
 
     <LinearLayout
         android:id="@+id/prayer_selector"

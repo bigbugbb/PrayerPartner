@@ -43,7 +43,7 @@ public class PartnerFragment extends AppFragment {
     private static final String TAG = makeLogTag(PartnerFragment.class);
 
     private RecyclerView mPartnerList;
-    private FloatingActionButton mFabMakePartner;
+    private FloatingActionButton mFabPairPartner;
 
     private ThrottledContentObserver mPrayersObserver;
     private ThrottledContentObserver mLatestPairedPrayersObserver;
@@ -115,14 +115,14 @@ public class PartnerFragment extends AppFragment {
 
         mPrayerSelector.setVisibility(View.INVISIBLE);
 
-        mFabMakePartner = (FloatingActionButton) root.findViewById(R.id.fab_make_partner);
-        mFabMakePartner.setOnClickListener(new View.OnClickListener() {
+        mFabPairPartner = (FloatingActionButton) root.findViewById(R.id.fab_pair_partner);
+        mFabPairPartner.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mPrayerSelector.setY(mFragmentHeight * 0.6f);
                 mPrayerSelector.setVisibility(View.VISIBLE);
                 mPrayerSelector.animate().translationY(0).setDuration(500).start();
-                mFabMakePartner.hide();
+                mFabPairPartner.hide();
                 mPrayerGridAdapter.notifyDataSetChanged();
             }
         });
@@ -131,7 +131,7 @@ public class PartnerFragment extends AppFragment {
             @Override
             public void onClick(View v) {
                 mPrayerSelector.animate().translationY(mFragmentHeight * 0.6f).setDuration(500).start();
-                mFabMakePartner.show();
+                mFabPairPartner.show();
                 cancelSelection();
             }
         });
@@ -147,7 +147,7 @@ public class PartnerFragment extends AppFragment {
                     return;
                 }
                 mPrayerSelector.animate().translationY(mFragmentHeight * 0.6f).setDuration(500).start();
-                mFabMakePartner.show();
+                mFabPairPartner.show();
                 applySelection();
             }
         });
