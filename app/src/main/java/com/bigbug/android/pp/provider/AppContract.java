@@ -33,19 +33,26 @@ public class AppContract {
         String UPDATED = "updated";
     }
 
+    interface AppInfoColumns {
+        String LAST_PAIR_ID    = "last_pair_id";
+        String LAST_PARTNER_ID = "last_partner_id";
+    }
+
     interface PrayerColumns extends TimeColumns {
         String NAME  = "name";
         String PHOTO = "photo";
         String EMAIL = "email";
     }
 
-    interface PartnerColumns extends TimeColumns {
+    /** Every time the user clicks the 'Pair' button, it generates a new pair. */
+    interface PairColumns extends TimeColumns {
         /** More extra fields */
     }
 
-    interface PartnerPrayerColumns extends TimeColumns {
-        String PARTNER_ID = "partner_id";
+    interface PairPrayerColumns extends TimeColumns {
+        String PAIR_ID    = "pair_id";
         String PRAYER_ID  = "prayer_id";
+        String PARTNER_ID = "partner_id";
     }
 
     public static final String CONTENT_AUTHORITY = "com.bigbug.pp";
@@ -53,6 +60,23 @@ public class AppContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     public static final String SELECTION_BY_DIRTY = String.format("%s = ?", SyncColumns.DIRTY);
+
+    public static class AppInfo implements AppInfoColumns, BaseColumns {
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath("app_info").build();
+
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.app_info";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.app_info";
+
+        /** Build a {@link Uri} that references a given app info. */
+        public static Uri buildAppInfoUri(String appInfoId) {
+            return CONTENT_URI.buildUpon().appendPath(appInfoId).build();
+        }
+
+        /** Read {@link #_ID} from {@link BaseColumns} {@link Uri}. */
+        public static String getAppInfoId(Uri uri) {
+            return uri.getPathSegments().get(1);
+        }
+    }
 
     public static class Prayers implements PrayerColumns, SyncColumns, BaseColumns {
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath("prayers").build();
@@ -71,36 +95,36 @@ public class AppContract {
         }
     }
 
-    public static class Partners implements PartnerColumns, SyncColumns, BaseColumns {
-        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath("partners").build();
+    public static class Pairs implements PairColumns, SyncColumns, BaseColumns {
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath("pairs").build();
 
-        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.partner";
-        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.partner";
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.pair";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.pair";
 
-        /** Build a {@link Uri} that references a given partner. */
-        public static Uri buildPartnerUri(String partnerId) {
-            return CONTENT_URI.buildUpon().appendPath(partnerId).build();
+        /** Build a {@link Uri} that references a given pair. */
+        public static Uri buildPairUri(String pairId) {
+            return CONTENT_URI.buildUpon().appendPath(pairId).build();
         }
 
         /** Read {@link #_ID} from {@link BaseColumns} {@link Uri}. */
-        public static String getPartnerId(Uri uri) {
+        public static String getPairId(Uri uri) {
             return uri.getPathSegments().get(1);
         }
     }
 
-    public static class PartnerPrayers implements PartnerPrayerColumns, SyncColumns, BaseColumns {
-        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath("partner_prayers").build();
+    public static class PairPrayers implements PairPrayerColumns, SyncColumns, BaseColumns {
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath("pair_prayers").build();
 
-        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.partner_prayer";
-        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.partner_prayer";
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.pair_prayer";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.pair_prayer";
 
-        /** Build a {@link Uri} that references a given partner prayer. */
-        public static Uri buildPartnerPrayerUri(String partnerId) {
-            return CONTENT_URI.buildUpon().appendPath(partnerId).build();
+        /** Build a {@link Uri} that references a given pair prayer. */
+        public static Uri buildPairPrayerUri(String pairPrayerId) {
+            return CONTENT_URI.buildUpon().appendPath(pairPrayerId).build();
         }
 
         /** Read {@link #_ID} from {@link BaseColumns} {@link Uri}. */
-        public static String getPartnerPrayerId(Uri uri) {
+        public static String getPairPrayerId(Uri uri) {
             return uri.getPathSegments().get(1);
         }
     }

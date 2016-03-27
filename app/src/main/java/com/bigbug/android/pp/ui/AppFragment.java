@@ -49,14 +49,14 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
         loaderManager.restartLoader(PrayersQuery.TOKEN_NORMAL, args, callbacks);
     }
 
-    public static void reloadPartners(LoaderManager loaderManager, LoaderCallbacks callbacks) {
+    public static void reloadPairs(LoaderManager loaderManager, LoaderCallbacks callbacks) {
         Bundle args = new Bundle();
-        loaderManager.restartLoader(PartnersQuery.TOKEN_NORMAL, args, callbacks);
+        loaderManager.restartLoader(PairsQuery.TOKEN_NORMAL, args, callbacks);
     }
 
-    public static void reloadPartnerPrayers(LoaderManager loaderManager, LoaderCallbacks callbacks) {
+    public static void reloadPairPrayers(LoaderManager loaderManager, LoaderCallbacks callbacks) {
         Bundle args = new Bundle();
-        loaderManager.restartLoader(PartnersQuery.TOKEN_NORMAL, args, callbacks);
+        loaderManager.restartLoader(PairsQuery.TOKEN_NORMAL, args, callbacks);
     }
 
     public static void reloadPhotos(LoaderManager loaderManager, LoaderCallbacks callbacks) {
@@ -80,14 +80,14 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
                         AppContract.Prayers.NAME);
                 break;
             }
-            case PartnersQuery.TOKEN_NORMAL: {
+            case PairsQuery.TOKEN_NORMAL: {
                 loader = new CursorLoader(
                         getActivity(),
-                        AppContract.Partners.CONTENT_URI,
+                        AppContract.Pairs.CONTENT_URI,
                         null,
                         null,
                         null,
-                        AppContract.Partners.CREATED + " DESC");
+                        AppContract.Pairs.CREATED + " DESC");
                 break;
             }
             case PhotosQuery.TOKEN_NORMAL: {
@@ -117,11 +117,11 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
         int TOKEN_NORMAL = 100;
     }
 
-    protected interface PartnersQuery {
+    protected interface PairsQuery {
         int TOKEN_NORMAL = 200;
     }
 
-    protected interface PartnerPrayersQuery {
+    protected interface PairPrayersQuery {
         int TOKEN_NORMAL = 300;
     }
 

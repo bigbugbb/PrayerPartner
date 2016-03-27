@@ -147,11 +147,6 @@ public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedL
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        switch (loader.getId()) {
-            case AppFragment.PartnersQuery.TOKEN_NORMAL: {
-                break;
-            }
-        }
     }
 
     @Override

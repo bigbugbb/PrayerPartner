@@ -64,7 +64,7 @@ public class PartnerFragment extends AppFragment {
         mPrayersObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
             @Override
             public void onThrottledContentObserverFired() {
-                LOGD(TAG, "ThrottledContentObserver fired (photos). Content changed.");
+                LOGD(TAG, "ThrottledContentObserver fired (prayers). Content changed.");
                 if (isAdded()) {
                     LOGD(TAG, "Requesting prayers cursor reload as a result of ContentObserver firing.");
                     reloadPrayers(getLoaderManager(), PartnerFragment.this);
@@ -72,6 +72,17 @@ public class PartnerFragment extends AppFragment {
             }
         });
         activity.getContentResolver().registerContentObserver(AppContract.Prayers.CONTENT_URI, true, mPrayersObserver);
+
+        mPartnersObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
+            @Override
+            public void onThrottledContentObserverFired() {
+                LOGD(TAG, "ThrottledContentObserver fired (partners). Content changed.");
+                if (isAdded()) {
+                    LOGD(TAG, "Requesting partners cursor reload as a result of ContentObserver firing.");
+                    reloadPairs(getLoaderManager(), PartnerFragment.this);
+                }
+            }
+        });
     }
 
     @Override
@@ -202,11 +213,6 @@ public class PartnerFragment extends AppFragment {
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        switch (loader.getId()) {
-            case AppFragment.PartnersQuery.TOKEN_NORMAL: {
-                break;
-            }
-        }
     }
 
     private PrayerGridAdapter.PrayerState[] prayersToPrayerStates(Prayer[] prayers) {
@@ -235,7 +241,7 @@ public class PartnerFragment extends AppFragment {
 
     private void applySelection() {
         // Get selected prayers
-        List<Prayer> selectedPrayers = new ArrayList<>(mPrayerGridAdapter.getCount());
+        final List<Prayer> selectedPrayers = new ArrayList<>(mPrayerGridAdapter.getCount());
         for (int i = 0; i < mPrayerGridAdapter.getCount(); ++i) {
             PrayerGridAdapter.PrayerState state = mPrayerGridAdapter.getItem(i);
             if (state.isSelected()) {
@@ -248,36 +254,60 @@ public class PartnerFragment extends AppFragment {
         shuffle(selectedPrayers);
 
         // Build and apply the operations to create a new partner and its associated pairs.
-        long now = System.currentTimeMillis();
-        ArrayList<ContentProviderOperation> ops = new ArrayList<>(selectedPrayers.size() / 2 + 1);
-        ops.add(ContentProviderOperation
-                .newInsert(AppContract.Partners.CONTENT_URI)
-                .withValue(AppContract.TimeColumns.UPDATED, now)
-                .withValue(AppContract.TimeColumns.CREATED, now)
-                .build());
-        for (int i = 0; i < selectedPrayers.size(); i += 2) {
-            long id1 = selectedPrayers.get(i).id;
-            long id2 = selectedPrayers.get(i + 1).id;
-            ops.add(ContentProviderOperation
-                    .newInsert(AppContract.PartnerPrayers.CONTENT_URI)
-                    .withValueBackReference(AppContract.PartnerPrayers.PARTNER_ID, 0)
-                    .withValue(AppContract.PartnerPrayers.PRAYER_ID, id1)
-                    .withValue(AppContract.TimeColumns.UPDATED, now)
-                    .withValue(AppContract.TimeColumns.CREATED, now)
-                    .build());
-            ops.add(ContentProviderOperation
-                    .newInsert(AppContract.PartnerPrayers.CONTENT_URI)
-                    .withValueBackReference(AppContract.PartnerPrayers.PARTNER_ID, 0)
-                    .withValue(AppContract.PartnerPrayers.PRAYER_ID, id2)
-                    .withValue(AppContract.TimeColumns.UPDATED, now)
-                    .withValue(AppContract.TimeColumns.CREATED, now)
-                    .build());
-        }
-        try {
-            getActivity().getContentResolver().applyBatch(AppContract.CONTENT_AUTHORITY, ops);
-        } catch (RemoteException | OperationApplicationException e) {
-            LOGE(TAG, "Fail to pair partners: " + e);
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                long appInfoId = 0;
+                long lastPartnerId = 0;
+                Cursor cursor = getActivity().getContentResolver().query(AppContract.AppInfo.CONTENT_URI, null, null, null, null);
+                try {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        appInfoId = cursor.getLong(cursor.getColumnIndex(AppContract.AppInfo._ID));
+                        lastPartnerId = cursor.getLong(cursor.getColumnIndex(AppContract.AppInfo.LAST_PARTNER_ID));
+                    } else {
+                        return;
+                    }
+                } finally {
+                    cursor.close();
+                }
+
+                long now = System.currentTimeMillis();
+                ArrayList<ContentProviderOperation> ops = new ArrayList<>(selectedPrayers.size() / 2 + 1);
+                ops.add(ContentProviderOperation
+                        .newInsert(AppContract.Pairs.CONTENT_URI)
+                        .withValue(AppContract.TimeColumns.UPDATED, now)
+                        .withValue(AppContract.TimeColumns.CREATED, now)
+                        .build());
+                for (int i = 0; i < selectedPrayers.size(); i += 2) {
+                    lastPartnerId++;
+                    ops.add(ContentProviderOperation
+                            .newInsert(AppContract.PairPrayers.CONTENT_URI)
+                            .withValueBackReference(AppContract.PairPrayers.PAIR_ID, 0)
+                            .withValue(AppContract.PairPrayers.PRAYER_ID, selectedPrayers.get(i).id)
+                            .withValue(AppContract.PairPrayers.PARTNER_ID, lastPartnerId)
+                            .withValue(AppContract.TimeColumns.UPDATED, now)
+                            .withValue(AppContract.TimeColumns.CREATED, now)
+                            .build());
+                    ops.add(ContentProviderOperation
+                            .newInsert(AppContract.PairPrayers.CONTENT_URI)
+                            .withValueBackReference(AppContract.PairPrayers.PAIR_ID, 0)
+                            .withValue(AppContract.PairPrayers.PRAYER_ID, selectedPrayers.get(i + 1).id)
+                            .withValue(AppContract.PairPrayers.PARTNER_ID, lastPartnerId)
+                            .withValue(AppContract.TimeColumns.UPDATED, now)
+                            .withValue(AppContract.TimeColumns.CREATED, now)
+                            .build());
+                }
+                ops.add(ContentProviderOperation.newUpdate(AppContract.AppInfo.buildAppInfoUri("" + appInfoId))
+                        .withValueBackReference(AppContract.AppInfo.LAST_PAIR_ID, 0)
+                        .withValue(AppContract.AppInfo.LAST_PARTNER_ID, lastPartnerId)
+                        .build());
+                try {
+                    getActivity().getContentResolver().applyBatch(AppContract.CONTENT_AUTHORITY, ops);
+                } catch (RemoteException | OperationApplicationException e) {
+                    LOGE(TAG, "Fail to pair partners: " + e);
+                }
+            }
+        }).start();
     }
 
     private void shuffle(List list) {

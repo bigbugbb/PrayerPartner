@@ -24,8 +24,8 @@ public class Prayer implements Parcelable {
         name    = cursor.getString(cursor.getColumnIndex(AppContract.Prayers.NAME));
         email   = cursor.getString(cursor.getColumnIndex(AppContract.Prayers.EMAIL));
         photo   = cursor.getString(cursor.getColumnIndex(AppContract.Prayers.PHOTO));
-        created = cursor.getLong(cursor.getColumnIndex(AppContract.Partners.CREATED));
-        updated = cursor.getLong(cursor.getColumnIndex(AppContract.Partners.UPDATED));
+        created = cursor.getLong(cursor.getColumnIndex(AppContract.TimeColumns.CREATED));
+        updated = cursor.getLong(cursor.getColumnIndex(AppContract.TimeColumns.UPDATED));
     }
 
     // The cursor window should be larger than the whole block of data.

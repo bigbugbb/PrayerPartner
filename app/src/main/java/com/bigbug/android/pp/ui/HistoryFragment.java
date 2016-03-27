@@ -38,10 +38,10 @@ public class HistoryFragment extends AppFragment {
         mHistoryObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
             @Override
             public void onThrottledContentObserverFired() {
-                LOGD(TAG, "ThrottledContentObserver fired (photos). Content changed.");
+                LOGD(TAG, "ThrottledContentObserver fired (pairs). Content changed.");
                 if (isAdded()) {
                     LOGD(TAG, "Requesting photos cursor reload as a result of ContentObserver firing.");
-                    reloadPartners(getLoaderManager(), HistoryFragment.this);
+                    reloadPairs(getLoaderManager(), HistoryFragment.this);
                 }
             }
         });
@@ -99,7 +99,7 @@ public class HistoryFragment extends AppFragment {
         }
 
         switch (loader.getId()) {
-            case AppFragment.PartnersQuery.TOKEN_NORMAL: {
+            case AppFragment.PairsQuery.TOKEN_NORMAL: {
 //                CollectionView.Inventory photoInventory = Round.photoInventoryFromCursor(data);
 //                if (photoInventory != null) {
 //                    updateInventoryDisplayColumns(photoInventory);
@@ -113,7 +113,7 @@ public class HistoryFragment extends AppFragment {
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         switch (loader.getId()) {
-            case AppFragment.PartnersQuery.TOKEN_NORMAL: {
+            case AppFragment.PairsQuery.TOKEN_NORMAL: {
                 break;
             }
         }

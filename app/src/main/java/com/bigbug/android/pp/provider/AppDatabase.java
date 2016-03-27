@@ -6,8 +6,9 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.bigbug.android.pp.provider.AppContract.PartnerPrayers;
-import com.bigbug.android.pp.provider.AppContract.Partners;
+import com.bigbug.android.pp.provider.AppContract.AppInfo;
+import com.bigbug.android.pp.provider.AppContract.PairPrayers;
+import com.bigbug.android.pp.provider.AppContract.Pairs;
 import com.bigbug.android.pp.provider.AppContract.Prayers;
 import com.bigbug.android.pp.sync.SyncHelper;
 import com.bigbug.android.pp.sync.TrackerDataHandler;
@@ -34,20 +35,21 @@ public class AppDatabase extends SQLiteOpenHelper {
     private final Context mContext;
 
     interface Tables {
+        String APP_INFO = "app_info";
+        String PAIRS = "pairs";
         String PRAYERS = "prayers";
-        String PARTNERS = "partners";
-        String PARTNER_PRAYERS = "partner_prayers";
+        String PAIR_PRAYERS = "pair_prayers";
     }
 
     interface FOREIGN_KEY {
+        String PAIR_ID   = "FOREIGN KEY(pair_id) ";
         String PRAYER_ID = "FOREIGN KEY(prayer_id) ";
-        String PARTNER_ID = "FOREIGN KEY(partner_id) ";
     }
 
     /** {@code REFERENCES} clauses. */
     private interface References {
-        String PRAYER_ID  = "REFERENCES " + Tables.PRAYERS + "(" + Prayers._ID + ")";
-        String PARTNER_ID = "REFERENCES " + Tables.PARTNERS + "(" + Partners._ID + ")";
+        String PAIR_ID   = "REFERENCES " + Tables.PAIRS + "(" + Pairs._ID + ")";
+        String PRAYER_ID = "REFERENCES " + Tables.PRAYERS + "(" + Prayers._ID + ")";
     }
 
     public AppDatabase(Context context) {
@@ -58,6 +60,11 @@ public class AppDatabase extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         // Create tables
+        db.execSQL("CREATE TABLE " + Tables.APP_INFO + " ("
+                + AppInfo._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + AppInfo.LAST_PAIR_ID + " INTEGER,"
+                + AppInfo.LAST_PARTNER_ID + " INTEGER);");
+
         db.execSQL("CREATE TABLE " + Tables.PRAYERS + " ("
                 + Prayers._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + Prayers.DIRTY + " INTEGER DEFAULT 1,"
@@ -68,30 +75,31 @@ public class AppDatabase extends SQLiteOpenHelper {
                 + Prayers.PHOTO + " TEXT,"
                 + Prayers.EMAIL + " TEXT UNIQUE NOT NULL);");
 
-        db.execSQL("CREATE TABLE " + Tables.PARTNERS + " ("
-                + Partners._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + Partners.DIRTY + " INTEGER DEFAULT 1,"
-                + Partners.SYNC + " TEXT,"
-                + Partners.UPDATED + " INTEGER NOT NULL,"
-                + Partners.CREATED + " INTEGER NOT NULL);");
+        db.execSQL("CREATE TABLE " + Tables.PAIRS + " ("
+                + Pairs._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + Pairs.DIRTY + " INTEGER DEFAULT 1,"
+                + Pairs.SYNC + " TEXT,"
+                + Pairs.UPDATED + " INTEGER NOT NULL,"
+                + Pairs.CREATED + " INTEGER NOT NULL);");
 
-        db.execSQL("CREATE TABLE " + Tables.PARTNER_PRAYERS + " ("
-                + PartnerPrayers._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + PartnerPrayers.DIRTY + " INTEGER DEFAULT 1,"
-                + PartnerPrayers.SYNC + " TEXT,"
-                + PartnerPrayers.UPDATED + " INTEGER NOT NULL,"
-                + PartnerPrayers.CREATED + " INTEGER NOT NULL,"
-                + PartnerPrayers.PARTNER_ID + " INTEGER NOT NULL,"
-                + PartnerPrayers.PRAYER_ID + " INTEGER NOT NULL,"
-                + FOREIGN_KEY.PARTNER_ID + References.PARTNER_ID + " ON DELETE CASCADE,"
+        db.execSQL("CREATE TABLE " + Tables.PAIR_PRAYERS + " ("
+                + PairPrayers._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + PairPrayers.DIRTY + " INTEGER DEFAULT 1,"
+                + PairPrayers.SYNC + " TEXT,"
+                + PairPrayers.UPDATED + " INTEGER NOT NULL,"
+                + PairPrayers.CREATED + " INTEGER NOT NULL,"
+                + PairPrayers.PAIR_ID + " INTEGER NOT NULL,"
+                + PairPrayers.PRAYER_ID + " INTEGER NOT NULL,"
+                + PairPrayers.PARTNER_ID + " INTEGER NOT NULL,"
+                + FOREIGN_KEY.PAIR_ID + References.PAIR_ID + " ON DELETE CASCADE,"
                 + FOREIGN_KEY.PRAYER_ID + References.PRAYER_ID + " ON DELETE CASCADE);");
 
-//        // Create indexes on prayer_id and partner_id
-//        db.execSQL("CREATE INDEX partner_prayer_prayer_id_index ON " + Tables.PARTNER_PRAYERS + "(" + PartnerPrayers.PRAYER_ID + ");");
-//        db.execSQL("CREATE INDEX partner_prayer_partner_id_index ON " + Tables.PARTNER_PRAYERS + "(" + PartnerPrayers.PARTNER_ID + ");");
-//
 //        // Create indexes on dirty
 //        db.execSQL("CREATE INDEX partner_prayer_dirty_index ON " + Tables.PARTNER_PRAYERS + "(" + PartnerPrayers.DIRTY + ");");
+
+        db.execSQL("INSERT INTO " + Tables.APP_INFO + " ("
+                + AppInfo.LAST_PAIR_ID + ","
+                + AppInfo.LAST_PARTNER_ID + ") VALUES (0, 0);");
     }
 
     @Override
