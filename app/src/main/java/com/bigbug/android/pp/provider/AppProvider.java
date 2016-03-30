@@ -12,6 +12,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.provider.BaseColumns;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -19,6 +20,7 @@ import com.bigbug.android.pp.provider.AppContract.AppInfo;
 import com.bigbug.android.pp.provider.AppContract.PairPrayers;
 import com.bigbug.android.pp.provider.AppContract.Pairs;
 import com.bigbug.android.pp.provider.AppContract.Prayers;
+import com.bigbug.android.pp.provider.AppContract.TimeColumns;
 import com.bigbug.android.pp.provider.AppDatabase.Tables;
 import com.bigbug.android.pp.util.AccountUtils;
 import com.bigbug.android.pp.util.SelectionBuilder;
@@ -146,7 +148,7 @@ public class AppProvider extends ContentProvider {
 
         SelectionBuilder builder = null;
         switch (match) {
-            case PRAYERS: {
+            case PAIR_PRAYERS: {
                 builder = buildExpandedSelection(uri, match);
             }
             default: {
@@ -221,7 +223,6 @@ public class AppProvider extends ContentProvider {
         try {
             final ContentProviderResult[] retResult = super.applyBatch(operations);
             db.setTransactionSuccessful();
-//            getContext().getContentResolver().notifyChange(LentItemsContract.CONTENT_URI, null);
             return retResult;
         } finally {
             mIsInBatchMode.remove();
@@ -385,11 +386,7 @@ public class AppProvider extends ContentProvider {
                 return builder.table(Tables.PAIRS).where(Pairs._ID + "=?", id);
             }
             case PAIR_PRAYERS: {
-                return builder.table(Tables.PAIR_PRAYERS);
-            }
-            case PAIR_PRAYERS_ID: {
-                final String id = PairPrayers.getPairPrayerId(uri);
-                return builder.table(Tables.PAIR_PRAYERS).where(PairPrayers._ID + "=?", id);
+                return builder.table(Tables.PRAYERS_JOIN_PAIR_THROUGH_PAIR_PRAYERS);
             }
             default: {
                 throw new UnsupportedOperationException("Unknown uri for " + match + ": " + uri);
@@ -405,27 +402,36 @@ public class AppProvider extends ContentProvider {
     private SelectionBuilder buildExpandedSelection(Uri uri, int match) {
         final SelectionBuilder builder = new SelectionBuilder();
         switch (match) {
-            case PRAYERS:
-                String pairId = uri.getQueryParameter(Prayers.QUERY_PARAMETER_PAIR_ID);
+            case PAIR_PRAYERS:
+                String pairId = uri.getQueryParameter(PairPrayers.QUERY_PARAMETER_PAIR_ID);
                 if (TextUtils.isEmpty(pairId)) {
-                    return builder.table(Tables.PRAYERS);
+                    return null;
                 } else {
-                    if (pairId.equals(Prayers.DEFAULT_PAIR_ID)) {
-                        final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-                        Cursor cursor = db.query(Tables.APP_INFO, null, null, null, null, null, null);
-                        if (cursor.moveToFirst()) {
-                            pairId = cursor.getString(cursor.getColumnIndex(AppInfo.LAST_PAIR_ID));
-                        }
+                    if (pairId.equals(PairPrayers.DEFAULT_PAIR_ID)) {
+                        pairId = getLatestPairId();
+                    }
+                    if (TextUtils.isEmpty(pairId)) {
+                        return null;
                     }
                     return builder.table(Tables.PRAYERS_JOIN_PAIR_THROUGH_PAIR_PRAYERS)
-                            .mapToTable(Prayers._ID, Tables.PRAYERS)
-                            .mapToTable(Pairs._ID, Tables.PAIRS)
-                            .where(Prayers.QUERY_PARAMETER_PAIR_ID + "=?", pairId);
-//                            .groupBy(PairPrayers.PARTNER_ID);
+                            .mapToTable(BaseColumns._ID, Tables.PAIR_PRAYERS)
+                            .mapToTable(TimeColumns.CREATED, Tables.PAIR_PRAYERS)
+                            .mapToTable(TimeColumns.UPDATED, Tables.PAIR_PRAYERS)
+                            .where(PairPrayers.QUERY_PARAMETER_PAIR_ID + "=?", pairId)
+                            .groupBy(PairPrayers.PARTNER_ID + "," + PairPrayers.PRAYER_ID);
                 }
             default: {
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
             }
         }
+    }
+
+    private String getLatestPairId() {
+        final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        Cursor cursor = db.query(Tables.APP_INFO, null, null, null, null, null, null);
+        if (cursor.moveToFirst()) {
+            return cursor.getString(cursor.getColumnIndex(AppInfo.LAST_PAIR_ID));
+        }
+        return null;
     }
 }

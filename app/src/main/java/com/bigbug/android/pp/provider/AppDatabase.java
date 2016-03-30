@@ -83,7 +83,9 @@ public class AppDatabase extends SQLiteOpenHelper {
                 + Pairs.DIRTY + " INTEGER DEFAULT 1,"
                 + Pairs.SYNC + " TEXT,"
                 + Pairs.UPDATED + " INTEGER NOT NULL,"
-                + Pairs.CREATED + " INTEGER NOT NULL);");
+                + Pairs.CREATED + " INTEGER NOT NULL,"
+                + Pairs.NUMBER + " INTEGER NOT NULL,"
+                + Pairs.NOTIFIED + " INTEGER DEFAULT 0);");
 
         db.execSQL("CREATE TABLE " + Tables.PAIR_PRAYERS + " ("
                 + PairPrayers._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"

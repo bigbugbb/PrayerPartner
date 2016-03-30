@@ -7,6 +7,8 @@ import android.provider.MediaStore;
 
 import com.bigbug.android.pp.ui.widget.CollectionView;
 
+import org.apache.commons.io.FileUtils;
+
 
 public final class Photo implements Parcelable {
 
@@ -35,6 +37,15 @@ public final class Photo implements Parcelable {
         longitude = cursor.getFloat(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.LONGITUDE));
     }
 
+    public static Photo validPhotoFromCursor(Cursor cursor) {
+        Photo photo = new Photo(cursor);
+        if (FileUtils.getFile(photo.data).length() > 0) {
+            return photo;
+        } else {
+            return null;
+        }
+    }
+
     // The cursor window should be larger than the whole block of data.
     public static Photo[] photosFromCursor(Cursor cursor) {
         if (cursor != null && cursor.moveToFirst()) {
@@ -42,7 +53,7 @@ public final class Photo implements Parcelable {
             Photo[] images = new Photo[size];
             int i = 0;
             do {
-                images[i++] = new Photo(cursor);
+                images[i++] = validPhotoFromCursor(cursor);
             } while (cursor.moveToNext());
             cursor.moveToFirst();
             return images;
@@ -58,7 +69,10 @@ public final class Photo implements Parcelable {
             group.setDisplayCols(3);
             group.addItemWithTag("Take Photo");
             do {
-                group.addItemWithTag(new Photo(cursor));
+                Object tag = Photo.validPhotoFromCursor(cursor);
+                if (tag != null) {
+                    group.addItemWithTag(tag);
+                }
             } while (cursor.moveToNext());
             inventory.addGroup(group);
             return inventory;

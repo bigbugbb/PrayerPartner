@@ -2,6 +2,7 @@ package com.bigbug.android.pp.ui;
 
 import android.app.Activity;
 import android.content.ContentProviderOperation;
+import android.content.Context;
 import android.content.Loader;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
@@ -12,17 +13,24 @@ import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bigbug.android.pp.R;
+import com.bigbug.android.pp.adapter.BaseAbstractRecyclerCursorAdapter;
+import com.bigbug.android.pp.data.model.PairPrayer;
 import com.bigbug.android.pp.data.model.Prayer;
 import com.bigbug.android.pp.provider.AppContract;
 import com.bigbug.android.pp.ui.widget.PrayerGridAdapter;
@@ -34,6 +42,7 @@ import java.util.Random;
 
 import static com.bigbug.android.pp.util.LogUtils.LOGD;
 import static com.bigbug.android.pp.util.LogUtils.LOGE;
+import static com.bigbug.android.pp.util.LogUtils.LOGV;
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
 
 /**
@@ -42,14 +51,17 @@ import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
 public class PartnerFragment extends AppFragment {
     private static final String TAG = makeLogTag(PartnerFragment.class);
 
-    private RecyclerView mPartnerList;
+    private RecyclerView   mPartnerList;
+    private PartnerAdapter mPartnerAdapter;
+
     private FloatingActionButton mFabPairPartner;
 
     private ThrottledContentObserver mPrayersObserver;
-    private ThrottledContentObserver mLatestPairedPrayersObserver;
+    private ThrottledContentObserver mLatestPairPrayersObserver;
 
     private LinearLayout mPrayerSelector;
-    private GridView mPrayersGrid;
+
+    private GridView          mPrayerGrid;
     private PrayerGridAdapter mPrayerGridAdapter;
 
     private int mFragmentHeight;
@@ -74,24 +86,24 @@ public class PartnerFragment extends AppFragment {
         });
         activity.getContentResolver().registerContentObserver(AppContract.Prayers.CONTENT_URI, true, mPrayersObserver);
 
-        mLatestPairedPrayersObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
+        mLatestPairPrayersObserver = new ThrottledContentObserver(new ThrottledContentObserver.Callbacks() {
             @Override
             public void onThrottledContentObserverFired() {
                 LOGD(TAG, "ThrottledContentObserver fired (pair_prayers). Content changed.");
                 if (isAdded()) {
                     LOGD(TAG, "Requesting partners cursor reload as a result of ContentObserver firing.");
-                    reloadPairedPrayers(getLoaderManager(), null, PartnerFragment.this);
+                    reloadPairPrayers(getLoaderManager(), null, PartnerFragment.this);
                 }
             }
         });
-        activity.getContentResolver().registerContentObserver(AppContract.PairPrayers.CONTENT_URI, true, mLatestPairedPrayersObserver);
+        activity.getContentResolver().registerContentObserver(AppContract.PairPrayers.CONTENT_URI, true, mLatestPairPrayersObserver);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         getActivity().getContentResolver().unregisterContentObserver(mPrayersObserver);
-        getActivity().getContentResolver().unregisterContentObserver(mLatestPairedPrayersObserver);
+        getActivity().getContentResolver().unregisterContentObserver(mLatestPairPrayersObserver);
     }
 
     @Override
@@ -106,12 +118,17 @@ public class PartnerFragment extends AppFragment {
         CoordinatorLayout root = (CoordinatorLayout) inflater.inflate(R.layout.fragment_partner, container, false);
         mPartnerList = (RecyclerView) root.findViewById(R.id.partner_list);
 
+        mPartnerAdapter = new PartnerAdapter(getActivity());
+        mPartnerList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mPartnerList.setItemAnimator(new DefaultItemAnimator());
+//        mPartnerList.setAdapter(mPartnerAdapter);
+
         mPrayerSelector = (LinearLayout) root.findViewById(R.id.prayer_selector);
-        mPrayersGrid = (GridView) mPrayerSelector.findViewById(R.id.grid_prayers);
+        mPrayerGrid = (GridView) mPrayerSelector.findViewById(R.id.grid_prayers);
 
         mPrayerGridAdapter = new PrayerGridAdapter(getActivity());
-        mPrayersGrid.setAdapter(mPrayerGridAdapter);
-        mPrayersGrid.setEmptyView(root.findViewById(R.id.empty_view));
+        mPrayerGrid.setAdapter(mPrayerGridAdapter);
+        mPrayerGrid.setEmptyView(root.findViewById(R.id.empty_view));
 
         mPrayerSelector.setVisibility(View.INVISIBLE);
 
@@ -152,7 +169,7 @@ public class PartnerFragment extends AppFragment {
             }
         });
 
-        mPrayersGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mPrayerGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 LOGD(TAG, String.format("item %d is clicked", position));
@@ -183,7 +200,7 @@ public class PartnerFragment extends AppFragment {
         super.onResume();
         LOGD(TAG, "Reloading data as a result of onResume()");
         reloadPrayers(getLoaderManager(), this);
-        reloadPairedPrayers(getLoaderManager(), null, this);
+        reloadPairPrayers(getLoaderManager(), null, this);
     }
 
     @Override
@@ -212,12 +229,12 @@ public class PartnerFragment extends AppFragment {
                 }
                 break;
             }
-            case PrayersQuery.TOKEN_SEARCH: {
-                if (data != null && data.moveToFirst()) {
-                    LOGD(TAG, "PrayersQuery.TOKEN_SEARCH");
-                    do {
-                        DatabaseUtils.dumpCurrentRow(data);
-                    } while (data.moveToNext());
+            case PairPrayersQuery.TOKEN_NORMAL: {
+                LOGD(TAG, DatabaseUtils.dumpCursorToString(data));
+                final Partner[] partners = pairPrayersToPartner(PairPrayer.pairPrayersFromCursor(data));
+                if (partners != null) {
+//                    mPartnerAdapter.clear();
+//                    mPartnerAdapter.addAll();
                 }
                 break;
             }
@@ -226,6 +243,18 @@ public class PartnerFragment extends AppFragment {
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+    }
+
+    private Partner[] pairPrayersToPartner(PairPrayer[] pairPrayers) {
+        if (pairPrayers == null || pairPrayers.length == 0) {
+            return null;
+        }
+        Partner[] partners = new Partner[pairPrayers.length / 2];
+        for (int i = 0; i < pairPrayers.length; i += 2) {
+            // The query makes sure the results are grouped by partner id, so it easy to create partners.
+            partners[i / 2] = new Partner(pairPrayers[i], pairPrayers[i + 1]);
+        }
+        return partners;
     }
 
     private PrayerGridAdapter.PrayerState[] prayersToPrayerStates(Prayer[] prayers) {
@@ -264,7 +293,14 @@ public class PartnerFragment extends AppFragment {
         }
 
         // Pair prayers randomly (now only need to support two prayers into one partner group)
-        shuffle(selectedPrayers);
+        int size = selectedPrayers.size();
+        Random rand = new Random();
+        for (int i = 0; i < size; ++i) {
+            int p = rand.nextInt(size);
+            Prayer t = selectedPrayers.get(i);
+            selectedPrayers.set(i, selectedPrayers.get(p));
+            selectedPrayers.set(p, t);
+        }
 
         /**
          *  Build and apply the operations to create a new partner and its associated pairs.
@@ -328,14 +364,87 @@ public class PartnerFragment extends AppFragment {
         }).start();
     }
 
-    private void shuffle(List list) {
-        int size = list.size();
-        Random rand = new Random();
-        for (int i = 0; i < size; ++i) {
-            int p = rand.nextInt(size);
-            Object t = list.get(i);
-            list.set(i, list.get(p));
-            list.set(p, t);
+    public static class PartnerAdapter extends BaseAbstractRecyclerCursorAdapter<PartnerAdapter.ViewHolder> {
+        private Context mContext;
+        private List<OnPrayerItemSelectedListener> mListeners = new ArrayList<>();
+
+        public PartnerAdapter(Context context) {
+            super(context, null);
+            mContext = context;
+        }
+
+        public void addOnItemSelectedListener(OnPrayerItemSelectedListener listener) {
+            mListeners.add(listener);
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View item = LayoutInflater.from(mContext).inflate(R.layout.item_partner, parent, false);
+            return new ViewHolder(item);
+        }
+
+        /**
+         * Call when bind view with the cursor
+         *
+         * @param holder RecyclerView.ViewHolder
+         * @param cursor The cursor from which to get the data. The cursor is already
+         */
+        @Override
+        public void onBindViewHolder(ViewHolder holder, Cursor cursor) {
+            holder.bindData(new Prayer(cursor));
+        }
+
+        @Override
+        public Prayer getItem(int position) {
+            Cursor cursor = (Cursor) super.getItem(position);
+            if (cursor != null) {
+                return new Prayer(cursor);
+            }
+            return null;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return 0;
+        }
+
+        public class ViewHolder extends RecyclerView.ViewHolder {
+            TextView  mName1;
+            TextView  mName2;
+            ImageView mImage1;
+            ImageView mImage2;
+
+            ViewHolder(final View view) {
+                super(view);
+                mName1  = (TextView) view.findViewById(R.id.partner1_name);
+                mName2  = (TextView) view.findViewById(R.id.partner2_name);
+                mImage1 = (ImageView) view.findViewById(R.id.partner1_photo);
+                mImage2 = (ImageView) view.findViewById(R.id.partner2_photo);
+            }
+
+            void bindData(final Prayer prayer) {
+//                mName.setText(prayer.name);
+//                mEmail.setText(prayer.email);
+//                if (!TextUtils.isEmpty(prayer.photo)) {
+//                    File photoFile = new File(prayer.photo);
+//                    if (photoFile.exists() && photoFile.isFile()) {
+//                        Glide.with(mContext)
+//                                .load(Uri.fromFile(photoFile))
+//                                .centerCrop()
+//                                .crossFade(250)
+//                                .into(mPhoto);
+//                    }
+//                } else {
+//                    mPhoto.setImageResource(R.drawable.ic_default_prayer);
+//                }
+            }
+        }
+    }
+
+    public static class Partner extends Pair<PairPrayer, PairPrayer> {
+
+        public Partner(PairPrayer first, PairPrayer second) {
+            super(first, second);
         }
     }
 }

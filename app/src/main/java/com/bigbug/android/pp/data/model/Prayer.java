@@ -30,14 +30,16 @@ public class Prayer implements Parcelable {
 
     // The cursor window should be larger than the whole block of data.
     public static Prayer[] prayersFromCursor(Cursor cursor) {
-        if (cursor != null && cursor.moveToFirst()) {
+        if (cursor != null) {
             final int size = cursor.getCount();
+            if (size == 0) {
+                return null;
+            }
             Prayer[] prayers = new Prayer[size];
             int i = 0;
-            do {
+            while (cursor.moveToNext()) {
                 prayers[i++] = new Prayer(cursor);
-            } while (cursor.moveToNext());
-            cursor.moveToFirst();
+            }
             return prayers;
         } else {
             return null;

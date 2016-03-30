@@ -5,6 +5,8 @@ import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 
+import com.bigbug.android.pp.data.model.PairPrayer;
+
 /**
  * Contract class for interacting with {@link AppProvider}.
  * <p>
@@ -46,7 +48,10 @@ public class AppContract {
 
     /** Every time the user clicks the 'Pair' button, it generates a new pair. */
     interface PairColumns extends TimeColumns {
-        /** More extra fields */
+        /** The number of prayers in this pair session. */
+        String NUMBER = "number";
+        /** The flag to indicate whether the pair result is notified to the prayers or not. */
+        String NOTIFIED = "notified";
     }
 
     interface PairPrayerColumns extends TimeColumns {
@@ -84,9 +89,6 @@ public class AppContract {
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.prayer";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.prayer";
 
-        public static final String DEFAULT_PAIR_ID = "latest";
-        public static final String QUERY_PARAMETER_PAIR_ID = "pair_id";
-
         /** Build a {@link Uri} that references a given prayer. */
         public static Uri buildPrayerUri(String prayerId) {
             return CONTENT_URI.buildUpon().appendPath(prayerId).build();
@@ -95,11 +97,6 @@ public class AppContract {
         /** Read {@link #_ID} from {@link BaseColumns} {@link Uri}. */
         public static String getPrayerId(Uri uri) {
             return uri.getPathSegments().get(1);
-        }
-
-        /** Build a {@link Uri} that references all prayers for a given pair session. */
-        public static Uri buildPairedPrayersUri(String pairId) {
-            return CONTENT_URI.buildUpon().appendQueryParameter(QUERY_PARAMETER_PAIR_ID, pairId).build();
         }
     }
 
@@ -126,6 +123,21 @@ public class AppContract {
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.pair_prayer";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.pair_prayer";
 
+        public static final String DEFAULT_PAIR_ID = "latest";
+        public static final String QUERY_PARAMETER_PAIR_ID = "pair_id";
+
+        public static final String[] PAIR_PRAYER_PROJECTION = new String[]{
+                BaseColumns._ID,
+                PairPrayerColumns.PAIR_ID,
+                PairPrayerColumns.PRAYER_ID,
+                PairPrayerColumns.PARTNER_ID,
+                PrayerColumns.NAME,
+                PrayerColumns.EMAIL,
+                PrayerColumns.PHOTO,
+                PairPrayerColumns.CREATED,
+                PairPrayerColumns.UPDATED
+        };
+
         /** Build a {@link Uri} that references a given pair prayer. */
         public static Uri buildPairPrayerUri(String pairPrayerId) {
             return CONTENT_URI.buildUpon().appendPath(pairPrayerId).build();
@@ -134,6 +146,11 @@ public class AppContract {
         /** Read {@link #_ID} from {@link BaseColumns} {@link Uri}. */
         public static String getPairPrayerId(Uri uri) {
             return uri.getPathSegments().get(1);
+        }
+
+        /** Build a {@link Uri} that references all prayers for a given pair session. */
+        public static Uri buildPairSessionUri(String pairId) {
+            return CONTENT_URI.buildUpon().appendQueryParameter(QUERY_PARAMETER_PAIR_ID, pairId).build();
         }
     }
 

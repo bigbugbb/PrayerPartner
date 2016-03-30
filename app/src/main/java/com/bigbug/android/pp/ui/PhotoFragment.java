@@ -213,7 +213,6 @@ public class PhotoFragment extends AppFragment {
     }
 
     private class PhotoCollectionAdapter implements CollectionViewCallbacks {
-        private boolean mFirstItem = true;
 
         @Override
         public View newCollectionHeaderView(Context context, int groupId, ViewGroup parent) {

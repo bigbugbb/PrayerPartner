@@ -10,6 +10,8 @@ import com.bigbug.android.pp.provider.AppContract;
 public final class Pair implements Parcelable {
 
     public long id;
+    public int  number;
+    public int  notified;
     public long created;
     public long updated;
 
@@ -17,9 +19,11 @@ public final class Pair implements Parcelable {
     }
 
     public Pair(Cursor cursor) {
-        id      = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID));
-        created = cursor.getLong(cursor.getColumnIndex(AppContract.TimeColumns.CREATED));
-        updated = cursor.getLong(cursor.getColumnIndex(AppContract.TimeColumns.UPDATED));
+        id       = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID));
+        number   = cursor.getInt(cursor.getColumnIndex(AppContract.Pairs.NUMBER));
+        notified = cursor.getInt(cursor.getColumnIndex(AppContract.Pairs.NOTIFIED));
+        created  = cursor.getLong(cursor.getColumnIndex(AppContract.TimeColumns.CREATED));
+        updated  = cursor.getLong(cursor.getColumnIndex(AppContract.TimeColumns.UPDATED));
     }
 
     @Override
@@ -30,14 +34,18 @@ public final class Pair implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(id);
+        dest.writeInt(number);
+        dest.writeInt(notified);
         dest.writeLong(created);
         dest.writeLong(updated);
     }
 
     private Pair(Parcel in) {
-        id      = in.readLong();
-        created = in.readLong();
-        updated = in.readLong();
+        id       = in.readLong();
+        number   = in.readInt();
+        notified = in.readInt();
+        created  = in.readLong();
+        updated  = in.readLong();
     }
 
     public static final Creator<Pair> CREATOR = new Creator<Pair>() {
