@@ -5,8 +5,6 @@ import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 
-import com.bigbug.android.pp.data.model.PairPrayer;
-
 /**
  * Contract class for interacting with {@link AppProvider}.
  * <p>

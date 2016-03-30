@@ -16,7 +16,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Pair;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,20 +29,24 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bigbug.android.pp.R;
-import com.bigbug.android.pp.adapter.BaseAbstractRecyclerCursorAdapter;
+import com.bigbug.android.pp.data.Partner;
 import com.bigbug.android.pp.data.model.PairPrayer;
 import com.bigbug.android.pp.data.model.Prayer;
 import com.bigbug.android.pp.provider.AppContract;
 import com.bigbug.android.pp.ui.widget.PrayerGridAdapter;
 import com.bigbug.android.pp.util.ThrottledContentObserver;
+import com.bumptech.glide.Glide;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 import static com.bigbug.android.pp.util.LogUtils.LOGD;
 import static com.bigbug.android.pp.util.LogUtils.LOGE;
-import static com.bigbug.android.pp.util.LogUtils.LOGV;
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
 
 /**
@@ -121,7 +125,7 @@ public class PartnerFragment extends AppFragment {
         mPartnerAdapter = new PartnerAdapter(getActivity());
         mPartnerList.setLayoutManager(new LinearLayoutManager(getActivity()));
         mPartnerList.setItemAnimator(new DefaultItemAnimator());
-//        mPartnerList.setAdapter(mPartnerAdapter);
+        mPartnerList.setAdapter(mPartnerAdapter);
 
         mPrayerSelector = (LinearLayout) root.findViewById(R.id.prayer_selector);
         mPrayerGrid = (GridView) mPrayerSelector.findViewById(R.id.grid_prayers);
@@ -231,10 +235,9 @@ public class PartnerFragment extends AppFragment {
             }
             case PairPrayersQuery.TOKEN_NORMAL: {
                 LOGD(TAG, DatabaseUtils.dumpCursorToString(data));
-                final Partner[] partners = pairPrayersToPartner(PairPrayer.pairPrayersFromCursor(data));
+                final Partner[] partners = pairPrayersToPartners(PairPrayer.pairPrayersFromCursor(data));
                 if (partners != null) {
-//                    mPartnerAdapter.clear();
-//                    mPartnerAdapter.addAll();
+                    mPartnerAdapter.setPartners(partners);
                 }
                 break;
             }
@@ -245,14 +248,14 @@ public class PartnerFragment extends AppFragment {
     public void onLoaderReset(Loader<Cursor> loader) {
     }
 
-    private Partner[] pairPrayersToPartner(PairPrayer[] pairPrayers) {
+    private Partner[] pairPrayersToPartners(PairPrayer[] pairPrayers) {
         if (pairPrayers == null || pairPrayers.length == 0) {
             return null;
         }
-        Partner[] partners = new Partner[pairPrayers.length / 2];
+        Partner[] partners = new Partner[pairPrayers.length >> 1];
         for (int i = 0; i < pairPrayers.length; i += 2) {
             // The query makes sure the results are grouped by partner id, so it easy to create partners.
-            partners[i / 2] = new Partner(pairPrayers[i], pairPrayers[i + 1]);
+            partners[i >> 1] = new Partner(pairPrayers[i], pairPrayers[i + 1]);
         }
         return partners;
     }
@@ -327,6 +330,7 @@ public class PartnerFragment extends AppFragment {
                 // Make a new pair session.
                 ops.add(ContentProviderOperation
                         .newInsert(AppContract.Pairs.CONTENT_URI)
+                        .withValue(AppContract.Pairs.NUMBER, selectedPrayers.size())
                         .withValue(AppContract.TimeColumns.UPDATED, now)
                         .withValue(AppContract.TimeColumns.CREATED, now)
                         .build());
@@ -364,17 +368,20 @@ public class PartnerFragment extends AppFragment {
         }).start();
     }
 
-    public static class PartnerAdapter extends BaseAbstractRecyclerCursorAdapter<PartnerAdapter.ViewHolder> {
+    public static class PartnerAdapter extends RecyclerView.Adapter<PartnerAdapter.ViewHolder> {
         private Context mContext;
-        private List<OnPrayerItemSelectedListener> mListeners = new ArrayList<>();
+        private List<Partner> mPartners = new ArrayList<>();
 
         public PartnerAdapter(Context context) {
-            super(context, null);
             mContext = context;
         }
 
-        public void addOnItemSelectedListener(OnPrayerItemSelectedListener listener) {
-            mListeners.add(listener);
+        public void setPartners(Partner[] partners) {
+            if (partners != null) {
+                mPartners.clear();
+                Collections.addAll(mPartners, partners);
+                notifyDataSetChanged();
+            }
         }
 
         @Override
@@ -383,29 +390,19 @@ public class PartnerFragment extends AppFragment {
             return new ViewHolder(item);
         }
 
-        /**
-         * Call when bind view with the cursor
-         *
-         * @param holder RecyclerView.ViewHolder
-         * @param cursor The cursor from which to get the data. The cursor is already
-         */
         @Override
-        public void onBindViewHolder(ViewHolder holder, Cursor cursor) {
-            holder.bindData(new Prayer(cursor));
-        }
-
-        @Override
-        public Prayer getItem(int position) {
-            Cursor cursor = (Cursor) super.getItem(position);
-            if (cursor != null) {
-                return new Prayer(cursor);
-            }
-            return null;
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            holder.bindData(mPartners.get(position));
         }
 
         @Override
         public int getItemViewType(int position) {
             return 0;
+        }
+
+        @Override
+        public int getItemCount() {
+            return mPartners.size();
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
@@ -422,29 +419,31 @@ public class PartnerFragment extends AppFragment {
                 mImage2 = (ImageView) view.findViewById(R.id.partner2_photo);
             }
 
-            void bindData(final Prayer prayer) {
-//                mName.setText(prayer.name);
-//                mEmail.setText(prayer.email);
-//                if (!TextUtils.isEmpty(prayer.photo)) {
-//                    File photoFile = new File(prayer.photo);
-//                    if (photoFile.exists() && photoFile.isFile()) {
-//                        Glide.with(mContext)
-//                                .load(Uri.fromFile(photoFile))
-//                                .centerCrop()
-//                                .crossFade(250)
-//                                .into(mPhoto);
-//                    }
-//                } else {
-//                    mPhoto.setImageResource(R.drawable.ic_default_prayer);
-//                }
+            void bindData(final Partner partner) {
+                PairPrayer prayer1 = partner.first;
+                PairPrayer prayer2 = partner.second;
+                if (prayer1 != null && prayer2 != null) {
+                    mName1.setText(prayer1.name);
+                    mName2.setText(prayer2.name);
+                    loadImage(prayer1.photo, mImage1);
+                    loadImage(prayer2.photo, mImage2);
+                }
             }
-        }
-    }
 
-    public static class Partner extends Pair<PairPrayer, PairPrayer> {
-
-        public Partner(PairPrayer first, PairPrayer second) {
-            super(first, second);
+            private void loadImage(final String imagePath, final ImageView imageView) {
+                if (!TextUtils.isEmpty(imagePath)) {
+                    File imageFile = FileUtils.getFile(imagePath);
+                    if (imageFile.exists() && imageFile.length() > 0) {
+                        Glide.with(mContext)
+                                .load(imageFile)
+                                .centerCrop()
+                                .crossFade()
+                                .into(imageView);
+                    }
+                } else {
+                    imageView.setImageResource(R.drawable.ic_default_prayer);
+                }
+            }
         }
     }
 }

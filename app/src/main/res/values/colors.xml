@@ -19,6 +19,7 @@
     <color name="timelines_background">#F8F8F8</color>
     <color name="pp_background">#ECECEC</color>
     <color name="photos_background">#ECECEC</color>
+    <color name="prayer_grid_background">#ECECEC</color>
 
     <color name="blue_grey_500">#607D8B</color>
     <color name="blue_grey_600">#546E7A</color>

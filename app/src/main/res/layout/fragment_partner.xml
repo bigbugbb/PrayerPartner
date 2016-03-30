@@ -71,7 +71,8 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:background="@color/prayer_grid_background">
 
             <GridView
                 android:id="@+id/grid_prayers"
