@@ -54,10 +54,15 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
         loaderManager.restartLoader(PairsQuery.TOKEN_NORMAL, args, callbacks);
     }
 
+    public static void reloadPairPrayers(LoaderManager loaderManager, LoaderCallbacks callbacks) {
+        Bundle args = new Bundle();
+        loaderManager.restartLoader(PairPrayersQuery.TOKEN_NORMAL, args, callbacks);
+    }
+
     public static void reloadPairPrayers(LoaderManager loaderManager, String pairId, LoaderCallbacks callbacks) {
         Bundle args = new Bundle();
         args.putString(AppContract.PairPrayers.QUERY_PARAMETER_PAIR_ID, pairId);
-        loaderManager.restartLoader(PairPrayersQuery.TOKEN_NORMAL, args, callbacks);
+        loaderManager.restartLoader(PairPrayersQuery.TOKEN_SEARCH, args, callbacks);
     }
 
     public static void reloadPhotos(LoaderManager loaderManager, LoaderCallbacks callbacks) {
@@ -92,6 +97,16 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
                 break;
             }
             case PairPrayersQuery.TOKEN_NORMAL: {
+                loader = new CursorLoader(
+                        getActivity(),
+                        AppContract.PairPrayers.CONTENT_URI,
+                        AppContract.PairPrayers.PAIR_PRAYER_PROJECTION,
+                        null,
+                        null,
+                        AppContract.PairPrayers.ORDER_BY_CREATED + " DESC");
+                break;
+            }
+            case PairPrayersQuery.TOKEN_SEARCH: {
                 loader = new CursorLoader(
                         getActivity(),
                         AppContract.PairPrayers.buildPairSessionUri(
@@ -135,6 +150,7 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
 
     protected interface PairPrayersQuery {
         int TOKEN_NORMAL = 300;
+        int TOKEN_SEARCH = 301;
     }
 
     protected interface PhotosQuery {

@@ -208,6 +208,12 @@ public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedL
                 mName  = (TextView) view.findViewById(R.id.prayer_name);
                 mEmail = (TextView) view.findViewById(R.id.prayer_email);
                 mPhoto = (ImageView) view.findViewById(R.id.prayer_photo);
+                view.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
             }
 
             void bindData(final Prayer prayer) {

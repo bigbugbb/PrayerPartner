@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:context=".ui.HistoryFragment">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="8dp"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@color/grid_image_background">
+
+                <ImageView
+                    android:id="@+id/prayer1_photo"
+                    android:layout_width="90dp"
+                    android:layout_height="90dp"
+                    android:layout_gravity="center"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop"/>
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/prayer1_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:paddingTop="4dp"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:ellipsize="end"
+                tools:text="bigbug"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="8dp"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@color/grid_image_background">
+
+                <ImageView
+                    android:id="@+id/prayer2_photo"
+                    android:layout_width="90dp"
+                    android:layout_height="90dp"
+                    android:layout_gravity="center"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop"/>
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/prayer2_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:paddingTop="4dp"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:ellipsize="end"
+                tools:text="minibug"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_shake_hands"/>
+
+</FrameLayout>

@@ -385,9 +385,6 @@ public class AppProvider extends ContentProvider {
                 final String id = Pairs.getPairId(uri);
                 return builder.table(Tables.PAIRS).where(Pairs._ID + "=?", id);
             }
-            case PAIR_PRAYERS: {
-                return builder.table(Tables.PRAYERS_JOIN_PAIR_THROUGH_PAIR_PRAYERS);
-            }
             default: {
                 throw new UnsupportedOperationException("Unknown uri for " + match + ": " + uri);
             }
@@ -405,19 +402,20 @@ public class AppProvider extends ContentProvider {
             case PAIR_PRAYERS:
                 String pairId = uri.getQueryParameter(PairPrayers.QUERY_PARAMETER_PAIR_ID);
                 if (TextUtils.isEmpty(pairId)) {
-                    return null;
+                    return builder.table(Tables.PRAYERS_JOIN_PAIR_THROUGH_PAIR_PRAYERS)
+                            .mapToTable(BaseColumns._ID, Tables.PAIR_PRAYERS)
+                            .mapToTable(TimeColumns.CREATED, Tables.PAIR_PRAYERS)
+                            .mapToTable(TimeColumns.UPDATED, Tables.PAIR_PRAYERS)
+                            .groupBy(PairPrayers.PAIR_ID + "," + PairPrayers.PARTNER_ID + "," + PairPrayers.PRAYER_ID);
                 } else {
                     if (pairId.equals(PairPrayers.DEFAULT_PAIR_ID)) {
                         pairId = getLatestPairId();
-                    }
-                    if (TextUtils.isEmpty(pairId)) {
-                        return null;
                     }
                     return builder.table(Tables.PRAYERS_JOIN_PAIR_THROUGH_PAIR_PRAYERS)
                             .mapToTable(BaseColumns._ID, Tables.PAIR_PRAYERS)
                             .mapToTable(TimeColumns.CREATED, Tables.PAIR_PRAYERS)
                             .mapToTable(TimeColumns.UPDATED, Tables.PAIR_PRAYERS)
-                            .where(PairPrayers.QUERY_PARAMETER_PAIR_ID + "=?", pairId)
+                            .where(PairPrayers.QUERY_PARAMETER_PAIR_ID + "=?", TextUtils.isEmpty(pairId) ? "" : pairId)
                             .groupBy(PairPrayers.PARTNER_ID + "," + PairPrayers.PRAYER_ID);
                 }
             default: {

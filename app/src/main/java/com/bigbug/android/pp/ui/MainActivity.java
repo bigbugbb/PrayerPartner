@@ -199,8 +199,8 @@ public class MainActivity extends BaseActivity implements TabLayout.OnTabSelecte
     private void populateViewPager() {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getFragmentManager());
         adapter.addFragment(new PrayerFragment(), getString(TAB_NAMES[0]));
-        adapter.addFragment(new PartnerFragment(), getString(TAB_NAMES[0]));
-        adapter.addFragment(new HistoryFragment(), getString(TAB_NAMES[1]));
+        adapter.addFragment(new PartnerFragment(), getString(TAB_NAMES[1]));
+        adapter.addFragment(new HistoryFragment(), getString(TAB_NAMES[2]));
         mViewPager.setAdapter(adapter);
     }
 

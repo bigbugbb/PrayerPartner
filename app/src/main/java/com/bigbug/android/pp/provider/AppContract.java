@@ -124,6 +124,8 @@ public class AppContract {
         public static final String DEFAULT_PAIR_ID = "latest";
         public static final String QUERY_PARAMETER_PAIR_ID = "pair_id";
 
+        public static final String ORDER_BY_CREATED = AppDatabase.Tables.PAIR_PRAYERS + "." + CREATED;
+
         public static final String[] PAIR_PRAYER_PROJECTION = new String[]{
                 BaseColumns._ID,
                 PairPrayerColumns.PAIR_ID,
