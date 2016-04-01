@@ -9,7 +9,9 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -19,16 +21,23 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bigbug.android.pp.R;
+import com.bigbug.android.pp.data.model.Prayer;
 import com.bigbug.android.pp.provider.AppContract;
+
+import java.io.File;
 
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
 
 public class PrayerSettingDialog extends DialogFragment {
     public static final String TAG = makeLogTag(PrayerSettingDialog.class);
 
-    private EditText mName;
-    private EditText mEmail;
+    private EditText  mName;
+    private EditText  mEmail;
     private ImageView mPhoto;
+
+    private Prayer mPrayer;
+
+    private OnPrayerSettingListener mListener;
 
     public final static int REQUEST_PRAYER_PHOTO = 0;
     public final static String PRAYER_PHOTO_URI = "prayer_photo_uri";
@@ -36,45 +45,88 @@ public class PrayerSettingDialog extends DialogFragment {
     public PrayerSettingDialog() {
     }
 
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        return new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.prayer_setting_dialog_title)
-                .setView(getCustomView(getActivity()))
-                .setPositiveButton("Done",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                // Do the data validation
-                                String name  = mName.getText().toString();
-                                String email = mEmail.getText().toString();
-                                if (TextUtils.isEmpty(name) || TextUtils.isEmpty(email)) {
-                                    final String errorMsg = getString(R.string.prayer_dialog_error_data);
-                                    Toast.makeText(getActivity(), errorMsg, Toast.LENGTH_LONG).show();
-                                    return;
-                                }
-
-                                // Insert data into prayers table so the prayers observer can be triggered
-                                ContentValues values = new ContentValues();
-                                values.put(AppContract.Prayers.NAME, mName.getText().toString());
-                                values.put(AppContract.Prayers.EMAIL, mEmail.getText().toString());
-                                values.put(AppContract.Prayers.PHOTO, (String) mPhoto.getTag());
-                                values.put(AppContract.TimeColumns.UPDATED, System.currentTimeMillis());
-                                values.put(AppContract.TimeColumns.CREATED, System.currentTimeMillis());
-                                getContentResolver().insert(AppContract.Prayers.CONTENT_URI, values);
-                            }
-                        }
-                )
-                .setNegativeButton("Cancel",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                dialog.dismiss();
-                            }
-                        }
-                )
-                .create();
+    public void setPrayer(Prayer prayer) {
+        mPrayer = prayer;
     }
 
-    public View getCustomView(Context context) {
+    public void setListener(OnPrayerSettingListener listener) {
+        mListener = listener;
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
+                .setTitle(R.string.prayer_setting_dialog_title)
+                .setView(getCustomView(getActivity()));
+
+        if (mPrayer == null) {
+            return buildForCreateMode(builder).create();
+        } else {
+            return buildForUpdateMode(builder).create();
+        }
+    }
+
+    protected AlertDialog.Builder buildForCreateMode(AlertDialog.Builder builder) {
+        return builder
+            .setPositiveButton("Add",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            Prayer prayer = new Prayer();
+                            prayer.name  = mName.getText().toString();
+                            prayer.email = mEmail.getText().toString();
+                            prayer.photo = (String) mPhoto.getTag();
+
+                            if (mListener != null) {
+                                mListener.onCreatePrayer(prayer);
+                            }
+                        }
+                    }
+            )
+            .setNegativeButton("Cancel",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            dialog.dismiss();
+                        }
+                    }
+            );
+    }
+
+    protected AlertDialog.Builder buildForUpdateMode(AlertDialog.Builder builder) {
+        return builder
+            .setPositiveButton("Update",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            Prayer prayer = new Prayer();
+                            prayer.id    = mPrayer.id;
+                            prayer.name  = mName.getText().toString();
+                            prayer.email = mEmail.getText().toString();
+                            prayer.photo = (String) mPhoto.getTag();
+
+                            if (mListener != null) {
+                                mListener.onUpdatePrayer(prayer);
+                            }
+                        }
+                    }
+            )
+            .setNeutralButton("Delete",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+//                            if (mListener != null) {
+//                                mListener.onDeletePrayer(mPrayer);
+//                            }
+                        }
+                    }
+            )
+            .setNegativeButton("Cancel",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            dialog.dismiss();
+                        }
+                    }
+            );
+    }
+
+    private View getCustomView(Context context) {
         View container = LayoutInflater.from(context).inflate(R.layout.fragment_prayer_setting, null);
         mName = (EditText) container.findViewById(R.id.name_setting);
         mEmail = (EditText) container.findViewById(R.id.email_setting);
@@ -86,11 +138,16 @@ public class PrayerSettingDialog extends DialogFragment {
                 startActivityForResult(intent, REQUEST_PRAYER_PHOTO);
             }
         });
-        return container;
-    }
 
-    private ContentResolver getContentResolver() {
-        return getActivity().getContentResolver();
+        if (mPrayer != null) {
+            Uri uri = Uri.fromFile(new File(mPrayer.photo));
+            mName.setText(mPrayer.name);
+            mEmail.setText(mPrayer.email);
+            mPhoto.setImageURI(uri);
+            mPhoto.setTag(mPrayer.photo);
+        }
+
+        return container;
     }
 
     @Override

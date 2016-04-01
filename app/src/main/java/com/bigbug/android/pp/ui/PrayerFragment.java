@@ -2,10 +2,13 @@ package com.bigbug.android.pp.ui;
 
 import android.app.Activity;
 import android.app.FragmentManager;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -20,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bigbug.android.pp.R;
 import com.bigbug.android.pp.adapter.BaseAbstractRecyclerCursorAdapter;
@@ -35,7 +39,7 @@ import java.util.List;
 import static com.bigbug.android.pp.util.LogUtils.LOGD;
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
 
-public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedListener {
+public class PrayerFragment extends AppFragment implements OnPrayerSettingListener {
     private static final String TAG = makeLogTag(PrayerFragment.class);
 
     private RecyclerView mPrayerList;
@@ -93,13 +97,13 @@ public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedL
                 PrayerSettingDialog dialog = new PrayerSettingDialog();
                 FragmentManager fm = getFragmentManager();
                 if (fm.findFragmentByTag(PrayerSettingDialog.TAG) == null) {
+                    dialog.setListener(PrayerFragment.this);
                     dialog.show(fm, PrayerSettingDialog.TAG);
                 }
             }
         });
 
         mPrayerAdapter = new PrayerAdapter(getActivity());
-        mPrayerAdapter.addOnItemSelectedListener(this);
 
         mPrayerList.setLayoutManager(new LinearLayoutManager(getActivity()));
         mPrayerList.setItemAnimator(new DefaultItemAnimator());
@@ -150,21 +154,139 @@ public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedL
     }
 
     @Override
-    public void onItemSelected(View itemView, int position) {
+    public void onCreatePrayer(Prayer prayer) {
+        new AsyncTask<Prayer, Void, Boolean>() {
 
+            @Override
+            protected Boolean doInBackground(Prayer... params) {
+                final Prayer prayer = params[0];
+
+                if (!isValidPrayer(prayer)) {
+                    return Boolean.FALSE;
+                }
+
+                try {
+                    // First check data conflict
+                    Cursor cursor = getActivity().getContentResolver().query(
+                            AppContract.Prayers.CONTENT_URI,
+                            null,
+                            AppContract.Prayers.QUERY_BY_EMAIL,
+                            new String[]{prayer.email},
+                            null);
+                    if (cursor != null && cursor.moveToFirst()) {
+                        return Boolean.FALSE;
+                    }
+
+                    // Insert data into prayers table so the prayers observer can be triggered
+                    ContentValues values = new ContentValues();
+                    values.put(AppContract.Prayers.NAME, prayer.name);
+                    values.put(AppContract.Prayers.EMAIL, prayer.email);
+                    values.put(AppContract.Prayers.PHOTO, prayer.photo);
+                    values.put(AppContract.TimeColumns.UPDATED, System.currentTimeMillis());
+                    values.put(AppContract.TimeColumns.CREATED, System.currentTimeMillis());
+
+                    // Assume it works, otherwise we should get the broadcast.
+                    getActivity().getContentResolver().insert(AppContract.Prayers.CONTENT_URI, values);
+
+                    return Boolean.TRUE;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                return Boolean.FALSE;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean result) {
+                if (result == Boolean.FALSE) {
+                    if (isAdded()) {
+                        Toast.makeText(getActivity(), R.string.existing_prayer_email, Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+
+        }.execute(prayer);
     }
 
-    public static class PrayerAdapter extends BaseAbstractRecyclerCursorAdapter<PrayerAdapter.ViewHolder> {
+    @Override
+    public void onUpdatePrayer(Prayer prayer) {
+        new AsyncTask<Prayer, Void, Boolean>() {
+
+            @Override
+            protected Boolean doInBackground(Prayer... params) {
+                final Prayer prayer = params[0];
+
+                // First check data conflict
+                Cursor cursor = getActivity().getContentResolver().query(
+                        AppContract.Prayers.CONTENT_URI,
+                        null,
+                        AppContract.Prayers.QUERY_BY_EMAIL,
+                        new String[]{prayer.email},
+                        null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    Prayer existingPrayer = new Prayer(cursor);
+                    if (prayer.id != existingPrayer.id) {
+                        return Boolean.FALSE;
+                    }
+                }
+
+                // Insert data into prayers table so the prayers observer can be triggered
+                ContentValues values = new ContentValues();
+                values.put(AppContract.Prayers.NAME,  prayer.name);
+                values.put(AppContract.Prayers.EMAIL, prayer.email);
+                values.put(AppContract.Prayers.PHOTO, prayer.photo);
+                values.put(AppContract.TimeColumns.UPDATED, System.currentTimeMillis());
+
+                // Assume it works, otherwise we should get the broadcast
+                getActivity().getContentResolver().update(AppContract.Prayers.buildPrayerUri(prayer.id + ""), values, null, null);
+
+                return Boolean.TRUE;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean result) {
+                if (result == Boolean.FALSE) {
+                    if (isAdded()) {
+                        Toast.makeText(getActivity(), R.string.existing_prayer_email, Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+
+        }.execute(prayer);
+    }
+
+    @Override
+    public void onDeletePrayer(Prayer prayer) {
+        new AsyncTask<Prayer, Void, Void>() {
+
+            @Override
+            protected Void doInBackground(Prayer... params) {
+                final Prayer prayer = params[0];
+
+                // Assume it works, otherwise we should get the broadcast
+                getActivity().getContentResolver().delete(AppContract.Prayers.buildPrayerUri(prayer.id + ""), null, null);
+
+                return null;
+            }
+
+        }.execute(prayer);
+    }
+
+    private boolean isValidPrayer(Prayer prayer) {
+        if (TextUtils.isEmpty(prayer.name) || TextUtils.isEmpty(prayer.email)) {
+            final String errorMsg = getString(R.string.prayer_dialog_error_data);
+            Toast.makeText(getActivity(), errorMsg, Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
+    }
+
+    private class PrayerAdapter extends BaseAbstractRecyclerCursorAdapter<PrayerAdapter.ViewHolder> {
         private Context mContext;
-        private List<OnPrayerItemSelectedListener> mListeners = new ArrayList<>();
 
         public PrayerAdapter(Context context) {
             super(context, null);
             mContext = context;
-        }
-
-        public void addOnItemSelectedListener(OnPrayerItemSelectedListener listener) {
-            mListeners.add(listener);
         }
 
         @Override
@@ -198,10 +320,12 @@ public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedL
             return 0;
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
+        class ViewHolder extends RecyclerView.ViewHolder {
             TextView  mName;
             TextView  mEmail;
             ImageView mPhoto;
+
+            Prayer mPrayer;
 
             ViewHolder(final View view) {
                 super(view);
@@ -211,12 +335,19 @@ public class PrayerFragment extends AppFragment implements OnPrayerItemSelectedL
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
+                        PrayerSettingDialog dialog = new PrayerSettingDialog();
+                        FragmentManager fm = getFragmentManager();
+                        if (fm.findFragmentByTag(PrayerSettingDialog.TAG) == null) {
+                            dialog.setPrayer(mPrayer);
+                            dialog.setListener(PrayerFragment.this);
+                            dialog.show(fm, PrayerSettingDialog.TAG);
+                        }
                     }
                 });
             }
 
             void bindData(final Prayer prayer) {
+                mPrayer = prayer;
                 mName.setText(prayer.name);
                 mEmail.setText(prayer.email);
                 if (!TextUtils.isEmpty(prayer.photo)) {

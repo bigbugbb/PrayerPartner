@@ -168,4 +168,6 @@
     <string name="no_prayer_selected">Can\'t pair with empty prayer.</string>
     <string name="odd_prayers_count">Selected prayers number must be even.</string>
 
+    <string name="existing_prayer_email">This email is using by an existing prayer.\nPlease use another one.</string>
+
 </resources>

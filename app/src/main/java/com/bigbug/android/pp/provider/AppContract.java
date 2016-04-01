@@ -87,6 +87,8 @@ public class AppContract {
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.prayer";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.prayer";
 
+        public static final String QUERY_BY_EMAIL = EMAIL + "=?";
+
         /** Build a {@link Uri} that references a given prayer. */
         public static Uri buildPrayerUri(String prayerId) {
             return CONTENT_URI.buildUpon().appendPath(prayerId).build();

@@ -298,30 +298,35 @@ public class AppProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
 
-        switch (match) {
-            case APP_INFO: {
-                long newId = db.insertOrThrow(Tables.APP_INFO, null, values);
-                notifyChange(uri);
-                return AppInfo.buildAppInfoUri("" + newId);
+        try {
+            switch (match) {
+                case APP_INFO: {
+                    long newId = db.insertOrThrow(Tables.APP_INFO, null, values);
+                    notifyChange(uri);
+                    return AppInfo.buildAppInfoUri("" + newId);
+                }
+                case PRAYERS: {
+                    long newId = db.insertOrThrow(Tables.PRAYERS, null, values);
+                    notifyChange(uri);
+                    return Prayers.buildPrayerUri("" + newId);
+                }
+                case PAIRS: {
+                    long newId = db.insertOrThrow(Tables.PAIRS, null, values);
+                    notifyChange(uri);
+                    return Pairs.buildPairUri("" + newId);
+                }
+                case PAIR_PRAYERS: {
+                    long newId = db.insertOrThrow(Tables.PAIR_PRAYERS, null, values);
+                    notifyChange(uri);
+                    return PairPrayers.buildPairPrayerUri("" + newId);
+                }
+                default: {
+                    throw new UnsupportedOperationException("Unknown insert uri: " + uri);
+                }
             }
-            case PRAYERS: {
-                long newId = db.insertOrThrow(Tables.PRAYERS, null, values);
-                notifyChange(uri);
-                return Prayers.buildPrayerUri("" + newId);
-            }
-            case PAIRS: {
-                long newId = db.insertOrThrow(Tables.PAIRS, null, values);
-                notifyChange(uri);
-                return Pairs.buildPairUri("" + newId);
-            }
-            case PAIR_PRAYERS: {
-                long newId = db.insertOrThrow(Tables.PAIR_PRAYERS, null, values);
-                notifyChange(uri);
-                return PairPrayers.buildPairPrayerUri("" + newId);
-            }
-            default: {
-                throw new UnsupportedOperationException("Unknown insert uri: " + uri);
-            }
+        } catch (SQLException e) {
+
+            return null;
         }
     }
 
