@@ -4,25 +4,18 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.bigbug.android.pp.R;
 import com.bigbug.android.pp.data.model.Prayer;
-import com.bigbug.android.pp.provider.AppContract;
 
 import java.io.File;
 
@@ -111,9 +104,9 @@ public class PrayerSettingDialog extends DialogFragment {
             .setNeutralButton("Delete",
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int whichButton) {
-//                            if (mListener != null) {
-//                                mListener.onDeletePrayer(mPrayer);
-//                            }
+                            if (mListener != null) {
+                                mListener.onDeletePrayer(mPrayer);
+                            }
                         }
                     }
             )
@@ -128,7 +121,7 @@ public class PrayerSettingDialog extends DialogFragment {
 
     private View getCustomView(Context context) {
         View container = LayoutInflater.from(context).inflate(R.layout.fragment_prayer_setting, null);
-        mName = (EditText) container.findViewById(R.id.name_setting);
+        mName  = (EditText) container.findViewById(R.id.name_setting);
         mEmail = (EditText) container.findViewById(R.id.email_setting);
         mPhoto = (ImageView) container.findViewById(R.id.photo_setting);
         mPhoto.setOnClickListener(new View.OnClickListener() {

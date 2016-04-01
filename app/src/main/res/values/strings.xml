@@ -169,5 +169,8 @@
     <string name="odd_prayers_count">Selected prayers number must be even.</string>
 
     <string name="existing_prayer_email">This email is using by an existing prayer.\nPlease use another one.</string>
+    <string name="fail_to_add_prayer">Fail to add new prayer.</string>
+    <string name="fail_to_edit_prayer">Fail to edit the prayer.</string>
+    <string name="fail_to_delete_prayer">Fail to delete the prayer.</string>
 
 </resources>

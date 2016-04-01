@@ -2,13 +2,11 @@ package com.bigbug.android.pp.ui;
 
 import android.app.Activity;
 import android.app.FragmentManager;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -29,12 +27,11 @@ import com.bigbug.android.pp.R;
 import com.bigbug.android.pp.adapter.BaseAbstractRecyclerCursorAdapter;
 import com.bigbug.android.pp.data.model.Prayer;
 import com.bigbug.android.pp.provider.AppContract;
+import com.bigbug.android.pp.provider.handler.AppQueryHandler;
 import com.bigbug.android.pp.util.ThrottledContentObserver;
 import com.bumptech.glide.Glide;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.bigbug.android.pp.util.LogUtils.LOGD;
 import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
@@ -49,6 +46,8 @@ public class PrayerFragment extends AppFragment implements OnPrayerSettingListen
     private FloatingActionButton mFabAddPrayer;
 
     private ThrottledContentObserver mPrayerObserver;
+
+    private AppQueryHandler mPrayerSettingHandler;
 
     public PrayerFragment() {
         // Required empty public constructor
@@ -82,6 +81,84 @@ public class PrayerFragment extends AppFragment implements OnPrayerSettingListen
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mHandler = new Handler();
+        mPrayerSettingHandler = new AppQueryHandler(getActivity().getContentResolver()) {
+
+            @Override
+            protected void onQueryComplete(int token, Object cookie, Cursor cursor) {
+                switch (token) {
+                    case 0:
+                        handlePrayerCreate(token, cookie, cursor);
+                        break;
+                    case 1:
+                        handlePrayerUpdate(token, cookie, cursor);
+                        break;
+                }
+            }
+
+            @Override
+            protected void onDeleteComplete(int token, Object cookie, int result) {
+                // Empty
+            }
+
+            @Override
+            protected void onError(int token, Object cookie, RuntimeException error) {
+                if (isAdded()) {
+                    switch (token) {
+                        case 0:
+                            Toast.makeText(getActivity(), R.string.fail_to_add_prayer, Toast.LENGTH_LONG).show();
+                            break;
+                        case 1:
+                            Toast.makeText(getActivity(), R.string.fail_to_edit_prayer, Toast.LENGTH_LONG).show();
+                            break;
+                        case 2:
+                            Toast.makeText(getActivity(), R.string.fail_to_delete_prayer, Toast.LENGTH_LONG).show();
+                            break;
+                    }
+                }
+            }
+
+            private void handlePrayerCreate(int token, Object cookie, Cursor cursor) {
+                final Prayer prayer = (Prayer) cookie;
+
+                if (cursor != null && cursor.moveToFirst()) {
+                    if (isAdded()) {
+                        Toast.makeText(getActivity(), R.string.existing_prayer_email, Toast.LENGTH_LONG).show();
+                    }
+                    return;
+                }
+
+                ContentValues values = new ContentValues();
+                values.put(AppContract.Prayers.NAME, prayer.name);
+                values.put(AppContract.Prayers.EMAIL, prayer.email);
+                values.put(AppContract.Prayers.PHOTO, prayer.photo);
+                values.put(AppContract.TimeColumns.UPDATED, System.currentTimeMillis());
+                values.put(AppContract.TimeColumns.CREATED, System.currentTimeMillis());
+
+                startInsert(token, prayer, AppContract.Prayers.CONTENT_URI, values);
+            }
+
+            private void handlePrayerUpdate(int token, Object cookie, Cursor cursor) {
+                final Prayer prayer = (Prayer) cookie;
+
+                if (cursor != null && cursor.moveToFirst()) {
+                    Prayer existing = new Prayer(cursor);
+                    if (existing.id != prayer.id) {
+                        if (isAdded()) {
+                            Toast.makeText(getActivity(), R.string.existing_prayer_email, Toast.LENGTH_LONG).show();
+                        }
+                        return;
+                    }
+                }
+
+                ContentValues values = new ContentValues();
+                values.put(AppContract.Prayers.NAME, prayer.name);
+                values.put(AppContract.Prayers.EMAIL, prayer.email);
+                values.put(AppContract.Prayers.PHOTO, prayer.photo);
+                values.put(AppContract.TimeColumns.UPDATED, System.currentTimeMillis());
+
+                startUpdate(token, prayer, AppContract.Prayers.buildPrayerUri(prayer.id + ""), values, null, null);
+            }
+        };
     }
 
     @Override
@@ -155,121 +232,23 @@ public class PrayerFragment extends AppFragment implements OnPrayerSettingListen
 
     @Override
     public void onCreatePrayer(Prayer prayer) {
-        new AsyncTask<Prayer, Void, Boolean>() {
-
-            @Override
-            protected Boolean doInBackground(Prayer... params) {
-                final Prayer prayer = params[0];
-
-                if (!isValidPrayer(prayer)) {
-                    return Boolean.FALSE;
-                }
-
-                try {
-                    // First check data conflict
-                    Cursor cursor = getActivity().getContentResolver().query(
-                            AppContract.Prayers.CONTENT_URI,
-                            null,
-                            AppContract.Prayers.QUERY_BY_EMAIL,
-                            new String[]{prayer.email},
-                            null);
-                    if (cursor != null && cursor.moveToFirst()) {
-                        return Boolean.FALSE;
-                    }
-
-                    // Insert data into prayers table so the prayers observer can be triggered
-                    ContentValues values = new ContentValues();
-                    values.put(AppContract.Prayers.NAME, prayer.name);
-                    values.put(AppContract.Prayers.EMAIL, prayer.email);
-                    values.put(AppContract.Prayers.PHOTO, prayer.photo);
-                    values.put(AppContract.TimeColumns.UPDATED, System.currentTimeMillis());
-                    values.put(AppContract.TimeColumns.CREATED, System.currentTimeMillis());
-
-                    // Assume it works, otherwise we should get the broadcast.
-                    getActivity().getContentResolver().insert(AppContract.Prayers.CONTENT_URI, values);
-
-                    return Boolean.TRUE;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                return Boolean.FALSE;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean result) {
-                if (result == Boolean.FALSE) {
-                    if (isAdded()) {
-                        Toast.makeText(getActivity(), R.string.existing_prayer_email, Toast.LENGTH_LONG).show();
-                    }
-                }
-            }
-
-        }.execute(prayer);
+        if (!isValidPrayer(prayer)) {
+            return;
+        }
+        mPrayerSettingHandler.startQuery(0, prayer, AppContract.Prayers.CONTENT_URI, null, AppContract.Prayers.QUERY_BY_EMAIL, new String[]{prayer.email}, null);
     }
 
     @Override
     public void onUpdatePrayer(Prayer prayer) {
-        new AsyncTask<Prayer, Void, Boolean>() {
-
-            @Override
-            protected Boolean doInBackground(Prayer... params) {
-                final Prayer prayer = params[0];
-
-                // First check data conflict
-                Cursor cursor = getActivity().getContentResolver().query(
-                        AppContract.Prayers.CONTENT_URI,
-                        null,
-                        AppContract.Prayers.QUERY_BY_EMAIL,
-                        new String[]{prayer.email},
-                        null);
-                if (cursor != null && cursor.moveToFirst()) {
-                    Prayer existingPrayer = new Prayer(cursor);
-                    if (prayer.id != existingPrayer.id) {
-                        return Boolean.FALSE;
-                    }
-                }
-
-                // Insert data into prayers table so the prayers observer can be triggered
-                ContentValues values = new ContentValues();
-                values.put(AppContract.Prayers.NAME,  prayer.name);
-                values.put(AppContract.Prayers.EMAIL, prayer.email);
-                values.put(AppContract.Prayers.PHOTO, prayer.photo);
-                values.put(AppContract.TimeColumns.UPDATED, System.currentTimeMillis());
-
-                // Assume it works, otherwise we should get the broadcast
-                getActivity().getContentResolver().update(AppContract.Prayers.buildPrayerUri(prayer.id + ""), values, null, null);
-
-                return Boolean.TRUE;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean result) {
-                if (result == Boolean.FALSE) {
-                    if (isAdded()) {
-                        Toast.makeText(getActivity(), R.string.existing_prayer_email, Toast.LENGTH_LONG).show();
-                    }
-                }
-            }
-
-        }.execute(prayer);
+        if (!isValidPrayer(prayer)) {
+            return;
+        }
+        mPrayerSettingHandler.startQuery(1, prayer, AppContract.Prayers.CONTENT_URI, null, AppContract.Prayers.QUERY_BY_EMAIL, new String[]{prayer.email}, null);
     }
 
     @Override
     public void onDeletePrayer(Prayer prayer) {
-        new AsyncTask<Prayer, Void, Void>() {
-
-            @Override
-            protected Void doInBackground(Prayer... params) {
-                final Prayer prayer = params[0];
-
-                // Assume it works, otherwise we should get the broadcast
-                getActivity().getContentResolver().delete(AppContract.Prayers.buildPrayerUri(prayer.id + ""), null, null);
-
-                return null;
-            }
-
-        }.execute(prayer);
+        mPrayerSettingHandler.startDelete(2, prayer, AppContract.Prayers.buildPrayerUri(prayer.id + ""), null, null);
     }
 
     private boolean isValidPrayer(Prayer prayer) {
