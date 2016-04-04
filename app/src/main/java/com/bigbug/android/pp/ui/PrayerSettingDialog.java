@@ -121,7 +121,7 @@ public class PrayerSettingDialog extends DialogFragment {
     }
 
     private View getCustomView(Context context) {
-        View container = LayoutInflater.from(context).inflate(R.layout.fragment_prayer_setting, null);
+        View container = LayoutInflater.from(context).inflate(R.layout.dialog_prayer_setting, null);
         mName  = (EditText) container.findViewById(R.id.name_setting);
         mEmail = (EditText) container.findViewById(R.id.email_setting);
         mPhoto = (ImageView) container.findViewById(R.id.photo_setting);

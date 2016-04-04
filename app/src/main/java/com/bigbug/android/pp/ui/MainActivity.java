@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.bigbug.android.pp.R;
 import com.bigbug.android.pp.ui.widget.FragmentPagerAdapter;
+import com.bigbug.android.pp.util.HelpUtils;
 import com.bigbug.android.pp.util.LogUtils;
 
 import java.lang.ref.WeakReference;
@@ -153,7 +154,8 @@ public class MainActivity extends BaseActivity implements TabLayout.OnTabSelecte
 //                mMenu.findItem(R.id.action_clear).setVisible(true);
 //                return true;
 //            }
-            case R.id.action_settings: {
+            case R.id.action_about: {
+                HelpUtils.showAbout(this);
                 return true;
             }
         }
