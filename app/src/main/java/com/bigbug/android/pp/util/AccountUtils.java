@@ -34,7 +34,7 @@ public class AccountUtils {
     private static final String TAG = LogUtils.makeLogTag(AccountUtils.class);
 
     /** account type id */
-    public static final String ACCOUNT_TYPE = "com.localytics.android.itracker";
+    public static final String ACCOUNT_TYPE = "com.bigbug.android.pp";
 
     /** user data */
     public static final String USERDATA_USER_ID = "userId";

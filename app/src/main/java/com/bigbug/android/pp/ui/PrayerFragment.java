@@ -8,7 +8,6 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -80,7 +79,7 @@ public class PrayerFragment extends AppFragment implements OnPrayerSettingListen
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mHandler = new Handler();
+
         mPrayerSettingHandler = new AppQueryHandler(getActivity().getContentResolver()) {
 
             @Override
@@ -97,7 +96,11 @@ public class PrayerFragment extends AppFragment implements OnPrayerSettingListen
 
             @Override
             protected void onDeleteComplete(int token, Object cookie, int result) {
-                // Empty
+                if (token == 2) {
+                    LOGD(TAG, "Finish deleting selected prayer");
+                } else if (token == 3) {
+                    LOGD(TAG, "Finish deleting imcompleted pair_prayers");
+                }
             }
 
             @Override
@@ -249,6 +252,7 @@ public class PrayerFragment extends AppFragment implements OnPrayerSettingListen
     @Override
     public void onDeletePrayer(Prayer prayer) {
         mPrayerSettingHandler.startDelete(2, prayer, AppContract.Prayers.buildPrayerUri(prayer.id + ""), null, null);
+        mPrayerSettingHandler.startDelete(3, null, AppContract.PairPrayers.INCOMPLETED_PARTNER_URI, null, null);
     }
 
     private boolean isValidPrayer(Prayer prayer) {

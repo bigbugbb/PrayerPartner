@@ -61,7 +61,7 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
 
     public static void reloadPairPrayers(LoaderManager loaderManager, String pairId, LoaderCallbacks callbacks) {
         Bundle args = new Bundle();
-        args.putString(AppContract.PairPrayers.QUERY_PARAMETER_PAIR_ID, pairId);
+        args.putString(AppContract.PairPrayers.PAIR_ID, pairId);
         loaderManager.restartLoader(PairPrayersQuery.TOKEN_SEARCH, args, callbacks);
     }
 
@@ -110,7 +110,7 @@ public abstract class AppFragment extends Fragment implements LoaderCallbacks<Cu
                 loader = new CursorLoader(
                         getActivity(),
                         AppContract.PairPrayers.buildPairSessionUri(
-                                args.getString(AppContract.PairPrayers.QUERY_PARAMETER_PAIR_ID, AppContract.PairPrayers.DEFAULT_PAIR_ID)),
+                                args.getString(AppContract.PairPrayers.PAIR_ID, AppContract.PairPrayers.DEFAULT_PAIR_ID)),
                         AppContract.PairPrayers.PAIR_PRAYER_PROJECTION,
                         null,
                         null,

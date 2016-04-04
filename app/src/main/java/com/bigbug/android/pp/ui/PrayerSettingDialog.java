@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -133,11 +134,13 @@ public class PrayerSettingDialog extends DialogFragment {
         });
 
         if (mPrayer != null) {
-            Uri uri = Uri.fromFile(new File(mPrayer.photo));
             mName.setText(mPrayer.name);
             mEmail.setText(mPrayer.email);
-            mPhoto.setImageURI(uri);
-            mPhoto.setTag(mPrayer.photo);
+            if (!TextUtils.isEmpty(mPrayer.photo)) {
+                Uri uri = Uri.fromFile(new File(mPrayer.photo));
+                mPhoto.setImageURI(uri);
+                mPhoto.setTag(mPrayer.photo);
+            }
         }
 
         return container;

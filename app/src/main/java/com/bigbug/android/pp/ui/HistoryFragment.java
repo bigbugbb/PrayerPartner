@@ -111,7 +111,7 @@ public class HistoryFragment extends AppFragment {
     @Override
     public void onPause() {
         super.onPause();
-        mPairPrayersObserver.cancelPendingCallback();
+//        mPairPrayersObserver.cancelPendingCallback();
     }
 
     @Override

@@ -57,6 +57,7 @@ public class AppProvider extends ContentProvider {
 
     private static final int PAIR_PRAYERS = 400;
     private static final int PAIR_PRAYERS_ID = 401;
+    private static final int PAIR_PRAYERS_INCOMPLETED_PARTNERS = 402;
 
     /**
      * Build and return a {@link UriMatcher} that catches all {@link Uri}
@@ -76,7 +77,8 @@ public class AppProvider extends ContentProvider {
         matcher.addURI(authority, "pairs/*", PAIRS_ID);
 
         matcher.addURI(authority, "pair_prayers", PAIR_PRAYERS);
-        matcher.addURI(authority, "pair_prayers/*", PAIR_PRAYERS_ID);
+        matcher.addURI(authority, "pair_prayers/#", PAIR_PRAYERS_ID);
+        matcher.addURI(authority, "pair_prayers/incompleted_partners", PAIR_PRAYERS_INCOMPLETED_PARTNERS);
 
         return matcher;
     }
@@ -341,8 +343,19 @@ public class AppProvider extends ContentProvider {
             notifyChange(uri);
             return 1;
         }
+
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-        final SelectionBuilder builder = buildSimpleSelection(uri);
+        final int match = sUriMatcher.match(uri);
+        SelectionBuilder builder;
+        switch (match) {
+            case PAIR_PRAYERS_INCOMPLETED_PARTNERS: {
+                builder = buildExpandedSelection(uri, match);
+                break;
+            }
+            default: {
+                builder = buildSimpleSelection(uri);
+            }
+        }
         int retVal = builder.where(selection, selectionArgs).delete(db);
         notifyChange(uri);
         return retVal;
@@ -390,6 +403,13 @@ public class AppProvider extends ContentProvider {
                 final String id = Pairs.getPairId(uri);
                 return builder.table(Tables.PAIRS).where(Pairs._ID + "=?", id);
             }
+            case PAIR_PRAYERS: {
+                return builder.table(Tables.PAIR_PRAYERS);
+            }
+            case PAIR_PRAYERS_ID: {
+                final String id = PairPrayers.getPairPrayerId(uri);
+                return builder.table(Tables.PAIR_PRAYERS).where(PairPrayers._ID + "=?", id);
+            }
             default: {
                 throw new UnsupportedOperationException("Unknown uri for " + match + ": " + uri);
             }
@@ -404,14 +424,16 @@ public class AppProvider extends ContentProvider {
     private SelectionBuilder buildExpandedSelection(Uri uri, int match) {
         final SelectionBuilder builder = new SelectionBuilder();
         switch (match) {
-            case PAIR_PRAYERS:
-                String pairId = uri.getQueryParameter(PairPrayers.QUERY_PARAMETER_PAIR_ID);
+            case PAIR_PRAYERS: {
+                String pairId = uri.getQueryParameter(PairPrayers.PAIR_ID);
                 if (TextUtils.isEmpty(pairId)) {
+                    // A Left Join will return all rows from table1 even if they don't exist in table2.
                     return builder.table(Tables.PRAYERS_JOIN_PAIR_THROUGH_PAIR_PRAYERS)
                             .mapToTable(BaseColumns._ID, Tables.PAIR_PRAYERS)
                             .mapToTable(TimeColumns.CREATED, Tables.PAIR_PRAYERS)
                             .mapToTable(TimeColumns.UPDATED, Tables.PAIR_PRAYERS)
-                            .groupBy(PairPrayers.PAIR_ID + "," + PairPrayers.PARTNER_ID + "," + PairPrayers.PRAYER_ID);
+                            .groupBy(PairPrayers.PAIR_ID + "," + PairPrayers.PARTNER_ID + "," + PairPrayers.PRAYER_ID)
+                            .where(PairPrayers.SELECTION_VALID_PAIR_ID);
                 } else {
                     if (pairId.equals(PairPrayers.DEFAULT_PAIR_ID)) {
                         pairId = getLatestPairId();
@@ -420,9 +442,16 @@ public class AppProvider extends ContentProvider {
                             .mapToTable(BaseColumns._ID, Tables.PAIR_PRAYERS)
                             .mapToTable(TimeColumns.CREATED, Tables.PAIR_PRAYERS)
                             .mapToTable(TimeColumns.UPDATED, Tables.PAIR_PRAYERS)
-                            .where(PairPrayers.QUERY_PARAMETER_PAIR_ID + "=?", TextUtils.isEmpty(pairId) ? "" : pairId)
+                            .where(PairPrayers.PAIR_ID + "=?", TextUtils.isEmpty(pairId) ? "" : pairId)
                             .groupBy(PairPrayers.PARTNER_ID + "," + PairPrayers.PRAYER_ID);
                 }
+            }
+            case PAIR_PRAYERS_INCOMPLETED_PARTNERS: {
+                final String[] selectionArgs = getIncompletedPartnerIds();
+                final String selection = getIncompletedPartnerSelection(selectionArgs.length);
+                return builder.table(Tables.PAIR_PRAYERS)
+                        .where(selection, selectionArgs);
+            }
             default: {
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
             }
@@ -430,11 +459,63 @@ public class AppProvider extends ContentProvider {
     }
 
     private String getLatestPairId() {
-        final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-        Cursor cursor = db.query(Tables.APP_INFO, null, null, null, null, null, null);
-        if (cursor.moveToFirst()) {
-            return cursor.getString(cursor.getColumnIndex(AppInfo.LAST_PAIR_ID));
+        Cursor cursor = null;
+        try {
+            final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+            cursor = db.query(Tables.APP_INFO, null, null, null, null, null, null);
+            if (cursor.moveToFirst()) {
+                return cursor.getString(cursor.getColumnIndex(AppInfo.LAST_PAIR_ID));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
         return null;
+    }
+
+    private String getIncompletedPartnerSelection(final int argsCount) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(PairPrayers.PARTNER_ID).append(" IN (");
+        for (int i = 0; i < argsCount; ++i) {
+            if (i == 0) {
+                sb.append("?");
+            } else {
+                sb.append(",").append("?");
+            }
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
+    private String[] getIncompletedPartnerIds() {
+        String[] partnerIds = null;
+        Cursor cursor = null;
+        try {
+            final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+            cursor = db.query(
+                Tables.PAIR_PRAYERS,
+                new String[]{PairPrayers.PARTNER_ID, PairPrayers.COUNT_OF_PARTNER},
+                null,
+                null,
+                PairPrayers.PARTNER_ID,
+                PairPrayers.HAVING_INCOMPLETED_PARTNERS,
+                null);
+            partnerIds = new String[cursor.getCount()];
+            for (int i = 0; i < partnerIds.length; ++i) {
+                if (cursor.moveToPosition(i)) {
+                    partnerIds[i] = cursor.getLong(cursor.getColumnIndex(PairPrayers.PARTNER_ID)) + "";
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return partnerIds;
     }
 }

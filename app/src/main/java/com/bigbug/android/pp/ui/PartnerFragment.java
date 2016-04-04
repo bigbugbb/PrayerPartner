@@ -210,8 +210,8 @@ public class PartnerFragment extends AppFragment {
     @Override
     public void onPause() {
         super.onPause();
-        mPrayersObserver.cancelPendingCallback();
-        mLatestPairPrayersObserver.cancelPendingCallback();
+//        mPrayersObserver.cancelPendingCallback();
+//        mLatestPairPrayersObserver.cancelPendingCallback();
     }
 
     @Override
@@ -237,9 +237,7 @@ public class PartnerFragment extends AppFragment {
             case PairPrayersQuery.TOKEN_SEARCH: {
                 LOGD(TAG, DatabaseUtils.dumpCursorToString(data));
                 final Partner[] partners = pairPrayersToPartners(PairPrayer.pairPrayersFromCursor(data));
-                if (partners != null) {
-                    mPartnerAdapter.setPartners(partners);
-                }
+                mPartnerAdapter.setPartners(partners);
                 break;
             }
         }
@@ -378,11 +376,11 @@ public class PartnerFragment extends AppFragment {
         }
 
         public void setPartners(Partner[] partners) {
+            mPartners.clear();
             if (partners != null) {
-                mPartners.clear();
                 Collections.addAll(mPartners, partners);
-                notifyDataSetChanged();
             }
+            notifyDataSetChanged();
         }
 
         @Override

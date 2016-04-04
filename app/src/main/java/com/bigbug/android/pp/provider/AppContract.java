@@ -120,13 +120,18 @@ public class AppContract {
     public static class PairPrayers implements PairPrayerColumns, SyncColumns, BaseColumns {
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath("pair_prayers").build();
 
+        public static final Uri INCOMPLETED_PARTNER_URI = CONTENT_URI.buildUpon().appendPath("incompleted_partners").build();
+
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.pp.pair_prayer";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.pp.pair_prayer";
 
         public static final String DEFAULT_PAIR_ID = "latest";
-        public static final String QUERY_PARAMETER_PAIR_ID = "pair_id";
+        public static final String SELECTION_VALID_PAIR_ID = String.format("%s > 0", PAIR_ID);
 
         public static final String ORDER_BY_CREATED = AppDatabase.Tables.PAIR_PRAYERS + "." + CREATED;
+
+        public static final String COUNT_OF_PARTNER = String.format("COUNT(%s) AS count", PARTNER_ID);
+        public static final String HAVING_INCOMPLETED_PARTNERS = "count < 2";
 
         public static final String[] PAIR_PRAYER_PROJECTION = new String[]{
                 BaseColumns._ID,
@@ -152,7 +157,7 @@ public class AppContract {
 
         /** Build a {@link Uri} that references all prayers for a given pair session. */
         public static Uri buildPairSessionUri(String pairId) {
-            return CONTENT_URI.buildUpon().appendQueryParameter(QUERY_PARAMETER_PAIR_ID, pairId).build();
+            return CONTENT_URI.buildUpon().appendQueryParameter(PAIR_ID, pairId).build();
         }
     }
 
