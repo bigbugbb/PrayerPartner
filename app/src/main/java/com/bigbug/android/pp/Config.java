@@ -25,9 +25,7 @@ public class Config {
     // causes repeated syncs.
     public static final long MIN_INTERVAL_BETWEEN_SYNCS = 10 * DateUtils.MINUTE_IN_MILLIS;
 
-    public static final long MONITORING_INTERVAL_IN_MILLS = 1000 * 60;
     public static final int MONITORING_DURATION_IN_SECONDS = 10;
-    public static final long MONITORING_DURATION_IN_MICROS = 1000 * 1000 * MONITORING_DURATION_IN_SECONDS;
 
     // Values for the EventPoint feedback API. Sync happens at the same time as schedule sync,
     // and before that values are stored locally in the database.
@@ -37,15 +35,6 @@ public class Config {
     public static final String FEEDBACK_API_KEY = "";
     public static final String FEEDBACK_DUMMY_REGISTRANT_ID = "";
     public static final String FEEDBACK_SURVEY_ID = "";
-
-    // Sensor data related constants
-    public static final int ACCELEROMETER_DATA_AMPLIFIER = 50;
-    public static final int ACCELEROMETER_SENSOR_MAX_MAGNITUDE = 20;
-    public static final int ACCELEROMETER_DATA_MAX_MAGNITUDE = ACCELEROMETER_SENSOR_MAX_MAGNITUDE * ACCELEROMETER_DATA_AMPLIFIER;
-
-    // Data request intervals
-    public static final long LOCATION_REQUEST_INTERVAL = DateUtils.MINUTE_IN_MILLIS * 2;
-    public static final long ACTIVITY_REQUEST_INTERVAL = DateUtils.MINUTE_IN_MILLIS * 1;
 
     // Data sync configurations
     public static final boolean WIFI_ONLY_SYNC_ENABLED = true;

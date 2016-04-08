@@ -10,8 +10,8 @@ import com.bigbug.android.pp.provider.AppContract.AppInfo;
 import com.bigbug.android.pp.provider.AppContract.PairPrayers;
 import com.bigbug.android.pp.provider.AppContract.Pairs;
 import com.bigbug.android.pp.provider.AppContract.Prayers;
+import com.bigbug.android.pp.sync.AppDataHandler;
 import com.bigbug.android.pp.sync.SyncHelper;
-import com.bigbug.android.pp.sync.TrackerDataHandler;
 import com.bigbug.android.pp.util.AccountUtils;
 
 import static com.bigbug.android.pp.util.LogUtils.LOGD;
@@ -138,7 +138,7 @@ public class AppDatabase extends SQLiteOpenHelper {
 
         if (dataInvalidated) {
             LOGD(TAG, "Data invalidated; resetting our data timestamp.");
-            TrackerDataHandler.resetDataTimestamp(mContext);
+            AppDataHandler.resetDataTimestamp(mContext);
             if (account != null) {
                 LOGI(TAG, "DB upgrade complete. Requesting resync.");
                 SyncHelper.requestManualSync(account);

@@ -209,7 +209,7 @@ public final class DiskLruCache implements Closeable {
     File backupFile = new File(directory, JOURNAL_FILE_BACKUP);
     if (backupFile.exists()) {
       File journalFile = new File(directory, JOURNAL_FILE);
-      // If journal file also exists just delete backup file.
+      // If journal file also exists just delete full_backup_content file.
       if (journalFile.exists()) {
         backupFile.delete();
       } else {

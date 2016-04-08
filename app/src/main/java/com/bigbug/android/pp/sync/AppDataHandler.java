@@ -28,7 +28,7 @@ import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
  * Helper class that parses company data and imports them into the app's
  * Content Provider.
  */
-public class TrackerDataHandler {
+public class AppDataHandler {
     private static final String TAG = makeLogTag(SyncHelper.class);
 
     // Shared preferences key under which we store the timestamp that corresponds to
@@ -63,7 +63,7 @@ public class TrackerDataHandler {
     // Tally of total content provider operations we carried out (for statistical purposes)
     private int mContentProviderOperationsDone = 0;
 
-    public TrackerDataHandler(Context ctx) {
+    public AppDataHandler(Context ctx) {
         mContext = ctx;
     }
 

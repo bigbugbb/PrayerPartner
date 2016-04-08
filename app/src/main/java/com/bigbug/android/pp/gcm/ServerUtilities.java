@@ -52,7 +52,7 @@ import static com.bigbug.android.pp.util.LogUtils.makeLogTag;
 public final class ServerUtilities {
     private static final String TAG = makeLogTag("ServerUtilities");
 
-    private static final String PREFERENCES = "com.google.samples.apps.iosched.gcm";
+    private static final String PREFERENCES = "com.bigbug.android.pp.gcm";
     private static final String PROPERTY_REGISTERED_TS = "registered_ts";
     private static final String PROPERTY_REG_ID = "reg_id";
     private static final String PROPERTY_GCM_KEY = "gcm_key";
@@ -310,7 +310,7 @@ public final class ServerUtilities {
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
             conn.setRequestProperty("Content-Length", Integer.toString(body.length()));
-            conn.setRequestProperty("Accept", "application/vnd.localytics-show.v1");
+            conn.setRequestProperty("Accept", "application/vnd.pp.v1");
             conn.setRequestProperty("Authorization", authToken);
             // post the request
             OutputStream out = conn.getOutputStream();

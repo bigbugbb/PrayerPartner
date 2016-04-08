@@ -3,9 +3,8 @@ package com.bigbug.android.pp.gcm;
 import android.content.Intent;
 
 import com.bigbug.android.pp.util.PrefUtils;
-import com.google.android.gms.iid.InstanceIDListenerService;
 
-public class TrackerInstanceIDListenerService extends InstanceIDListenerService {
+public class InstanceIDListenerService extends com.google.android.gms.iid.InstanceIDListenerService {
 
     /**
      * Called if InstanceID token is updated. This may occur if the security of

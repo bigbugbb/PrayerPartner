@@ -3,8 +3,6 @@ package com.bigbug.android.pp.util;
 import android.content.Context;
 import android.os.Environment;
 
-import com.bigbug.android.pp.Config;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
@@ -28,8 +26,6 @@ public class DataFileUtils {
     private static final String TAG = makeLogTag(DataFileUtils.class);
 
     private static final SimpleDateFormat HourFormat = new SimpleDateFormat("HH");
-    private static final int INVALID_DATA = -1;
-    private static final int SUMMARY_COUNT = 24 * 60 * Config.MONITORING_DURATION_IN_SECONDS;
 
     public static String getSensorDataBaseDirPath(Context context) {
         String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + ".iTracker";

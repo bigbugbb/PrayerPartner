@@ -35,14 +35,14 @@ public class SyncHelper {
     private static final String TAG = LogUtils.makeLogTag("SyncHelper");
 
     private Context mContext;
-    private TrackerDataHandler mTrackerDataHandler;
+    private AppDataHandler mAppDataHandler;
     private RemoteTrackerDataFetcher mRemoteDataFetcher;
 
 //    TransferUtility mTransferUtility;
 
     public SyncHelper(Context context) {
         mContext = context;
-        mTrackerDataHandler = new TrackerDataHandler(mContext);
+        mAppDataHandler = new AppDataHandler(mContext);
         mRemoteDataFetcher = new RemoteTrackerDataFetcher(mContext);
     }
 
@@ -178,7 +178,7 @@ public class SyncHelper {
         }
         choresDuration = System.currentTimeMillis() - opStart;
 
-        int operations = mTrackerDataHandler.getContentProviderOperationsDone();
+        int operations = mAppDataHandler.getContentProviderOperationsDone();
         if (syncResult != null && syncResult.stats != null) {
             syncResult.stats.numEntries += operations;
             syncResult.stats.numUpdates += operations;
