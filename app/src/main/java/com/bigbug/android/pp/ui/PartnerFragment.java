@@ -17,6 +17,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +30,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bigbug.android.pp.R;
-import com.bigbug.android.pp.data.Partner;
 import com.bigbug.android.pp.data.model.PairPrayer;
 import com.bigbug.android.pp.data.model.Prayer;
 import com.bigbug.android.pp.provider.AppContract;
@@ -443,6 +443,13 @@ public class PartnerFragment extends AppFragment {
                     imageView.setImageResource(R.drawable.ic_default_prayer);
                 }
             }
+        }
+    }
+
+    public static class Partner extends Pair<PairPrayer, PairPrayer> {
+
+        public Partner(PairPrayer first, PairPrayer second) {
+            super(first, second);
         }
     }
 }
