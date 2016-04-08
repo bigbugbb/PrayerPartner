@@ -1,6 +1,7 @@
 package com.bigbug.android.pp;
 
 import com.bigbug.android.pp.util.LogUtils;
+import com.localytics.android.Localytics;
 import com.localytics.android.LocalyticsActivityLifecycleCallbacks;
 
 public class Application extends android.app.Application {
@@ -9,6 +10,8 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Localytics.setLoggingEnabled(true);
         registerActivityLifecycleCallbacks(new LocalyticsActivityLifecycleCallbacks(this));
     }
 }

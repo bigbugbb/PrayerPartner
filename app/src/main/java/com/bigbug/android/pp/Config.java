@@ -17,7 +17,7 @@ public class Config {
 
     // GCM config
     public static final String GCM_SERVER_URL = MANIFEST_URL + "/push_regs";
-    public static final String GCM_SENDER_ID = "";
+    public static final String GCM_SENDER_ID = "141069897769";
     public static final String GCM_API_KEY = "";
 
     // Minimum interval between two consecutive syncs. This is a safety mechanism to throttle

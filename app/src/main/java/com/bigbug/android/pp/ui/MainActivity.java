@@ -20,10 +20,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.bigbug.android.pp.Config;
 import com.bigbug.android.pp.R;
 import com.bigbug.android.pp.ui.widget.FragmentPagerAdapter;
 import com.bigbug.android.pp.util.HelpUtils;
 import com.bigbug.android.pp.util.LogUtils;
+import com.localytics.android.Localytics;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -74,6 +76,8 @@ public class MainActivity extends BaseActivity implements TabLayout.OnTabSelecte
         if (savedInstanceState != null) {
             mViewPager.setCurrentItem(savedInstanceState.getInt(SELECTED_TAB));
         }
+
+        Localytics.registerPush(Config.GCM_SENDER_ID);
     }
 
     @Override
